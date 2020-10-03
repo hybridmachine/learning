@@ -3,8 +3,10 @@
 %#ok<*NOPTS>
 
 % Gen two matrices
-M1 = randi([0, 10],4,2);
-M2 = randi([0, 10],2,4);
+m = 4;
+n = 6;
+M1 = randi([0, 10],m,n);
+M2 = randi([0, 10],n,m);
 
 sizeM1 = size(M1);
 sizeM2 = size(M2);
@@ -22,8 +24,18 @@ for submatrix = 1:sizeM1(2)
     end
 end
 
+% Example from lesson is fewer loops:
+
+C1 = zeros(m,m)
+for i=1:n
+    C1 = C1 + M1(:,i) * M2(i,:);
+end
+
 disp("Calculated answer by layers")
 R 
+
+disp("Calculated using code from lesson")
+C1
 
 disp("Check answer with builtin multiplication")
 M1*M2
