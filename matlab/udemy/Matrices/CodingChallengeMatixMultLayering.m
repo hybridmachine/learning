@@ -1,17 +1,30 @@
 % Implement matrix multiplication by layering
+% Option below suppresses warnings about output (non semicolon termination)
+%#ok<*NOPTS>
 
 % Gen two matrices
+M1 = randi([0, 10],4,2);
+M2 = randi([0, 10],2,4);
 
-M1 = randn(2,2);
-M2 = randn(2,2);
+sizeM1 = size(M1);
+sizeM2 = size(M2);
 
-for layer = 1:size(M2)(1)
-  for leftCol = 1:size(M1)(2)
-    for leftRow = 1:size(M1)(1)      
-      for rightCol = 1:size(M2)(2)
-        msg = sprintf("left row,col %d,%d : layer,col %d,%d", leftRow,leftCol,layer,rightCol);
-        disp(msg);
-      endfor
-    endfor
-  endfor
-endfor
+R = zeros(sizeM1(1), sizeM2(2));
+
+
+for submatrix = 1:sizeM1(2)
+    for layer = 1:sizeM1(1)
+      for rightCol = 1:sizeM2(2)
+        %msg = sprintf("left row,col %d,%d : layer,col %d,%d", layer,submatrix,submatrix,rightCol);
+        %disp(msg);
+        R(layer,rightCol) =  R(layer,rightCol) + (M1(layer,submatrix) * M2(submatrix,rightCol));
+      end
+    end
+end
+
+disp("Calculated answer by layers")
+R 
+
+disp("Check answer with builtin multiplication")
+M1*M2
+
