@@ -3,11 +3,13 @@
 %2D input vector
 v = [ 3 -2 ];
 
+thetas = linspace(1,2 * pi, 100);
 theta = pi/30;
+impureLen = zeros(length(thetas));
 
-while(1)
-    theta = theta + (2*pi)/(360/5);
-    A = [2*cos(theta) -2*sin(theta); 
+for idx = 1:length(thetas)
+    theta = thetas(idx);
+    A = [2*cos(theta) sin(theta); 
      sin(theta) cos(theta) ];
  
      w = A*v';
@@ -21,8 +23,12 @@ while(1)
  
     th = 0:pi/50:2*pi;
     r = norm(w);
+    impureLen(idx) = r;
     xunit = r * cos(th);
     yunit = r * sin(th);
     plot(xunit, yunit);
 	pause(0.05);
 end
+
+figure(3),clf;
+plot((impureLen/norm(v)));
