@@ -19,10 +19,10 @@ scaledCoords = scalingMatrix * coordMatrix;
 x = linspace(-pi, pi, 100);
 xy = [cos(x); sin(x)]';
 
-for i = -5:.5:5
+for i = -5:.25:5
     figure(1),clf;
     hold on
-    T = [1 0; i 1];
+    T = [i 0; i 1];
 
     plot(xy(:,1),xy(:,2),'bs', 'markerfacecolor', 'w');
 
