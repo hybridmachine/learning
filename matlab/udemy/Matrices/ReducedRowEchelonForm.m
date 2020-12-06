@@ -9,7 +9,7 @@ RMW = randi(25, 3,5);
 LRMT = RMT;
 LRMT(:,3) = LRMT(:,2); % Copy column 3 to col 2
 LRMW = RMW;
-LRMW(3,:) = LRMW(2,:); % Copy Row 4 to Row 5)
+LRMW(3,:) = LRMW(2,:); % Copy Row 3 to Row 2)
 
 disp('Square Matrix')
 rref(SM)
