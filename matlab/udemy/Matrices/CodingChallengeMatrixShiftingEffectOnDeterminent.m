@@ -15,7 +15,7 @@ valset = zeros(1,keysetSize(2));
 
 % "shift" the matrix (0 -> 0.1 * identity matrix). 
 shiftIdx = 1;
-for shift = 0:0.005:0.1
+for shift = keyset
     runIdx = 0;
     determinentVal = 0;
     for run = 1:1000
@@ -39,4 +39,6 @@ for shift = 0:0.005:0.1
 end
 
 % plot the avg abs det vs shift amount 
-plot(keyset,valset)
+plot(keyset,valset,'s-')
+xlabel("Fraction of identity matrix for shifting")
+ylabel("Determinent")
