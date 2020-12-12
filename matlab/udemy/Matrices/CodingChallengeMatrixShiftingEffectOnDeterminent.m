@@ -17,6 +17,7 @@ valset = zeros(1,keysetSize(2));
 shiftIdx = 1;
 for shift = keyset
     runIdx = 0;
+    
     determinentVal = 0;
     for run = 1:1000
         % Generate a square random matrix (say 20x20)
