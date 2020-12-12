@@ -1,0 +1,268 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 12.1' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       158,          7]
+NotebookDataLength[     10218,        260]
+NotebookOptionsPosition[      9285,        234]
+NotebookOutlinePosition[      9722,        251]
+CellTagsIndexPosition[      9679,        248]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+
+Cell[CellGroupData[{
+Cell[TextData[{
+ "Coding Challenge\n",
+ StyleBox["Effect of shifting reduced rank matrix on value of determinant", 
+  "Subtitle"]
+}], "Title",
+ CellChangeTimes->{{3.8167903034902506`*^9, 3.8167903236846704`*^9}, {
+  3.8168006488767767`*^9, 
+  3.816800655641365*^9}},ExpressionUUID->"0620a840-d5ac-47a2-bac4-\
+b7e3eafeb92f"],
+
+Cell[CellGroupData[{
+
+Cell["\<\
+Implementation of Udemy coding challenge originally done in Matlab \
+\>", "Subsection",
+ CellChangeTimes->{{3.8167903427377615`*^9, 3.8167903729968405`*^9}, {
+  3.8167905167481875`*^9, 
+  3.8167905173665495`*^9}},ExpressionUUID->"60316348-f3e0-424f-9b26-\
+a5fd5d93957a"],
+
+Cell[CellGroupData[{
+
+Cell[TextData[{
+ StyleBox["1 Generate a square random matrix (say 20x20)\n2 Impose a linear \
+dependence (reduce rank matrix)\n3 \[OpenCurlyDoubleQuote]shift\
+\[CloseCurlyDoubleQuote] the matrix (0 -> 0.1 * identity matrix). \n4 Compute \
+the abs(determinant) of the shifted matrix\n5 Repeat the above 1000 times for \
+each shift value, take an average of the abs(determinant)\n6 Plot the avg abs \
+determinant vs shift amount ", "Text"],
+ "\n"
+}], "Subsubsection",
+ CellChangeTimes->{{3.8167904212199907`*^9, 3.8167904583881655`*^9}, {
+  3.8167904929368258`*^9, 3.8167905040948443`*^9}, {3.81680048940427*^9, 
+  3.8168004942651763`*^9}},ExpressionUUID->"8e7ac4a2-cd75-4ece-abcc-\
+3988dec2ee23"],
+
+Cell[BoxData[
+ RowBox[{"\[IndentingNewLine]", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"ShiftList", " ", "=", " ", 
+     RowBox[{"Array", "[", 
+      RowBox[{
+       RowBox[{"#", "&"}], ",", "20", ",", 
+       RowBox[{"{", 
+        RowBox[{"0", ",", "0.1"}], "}"}]}], "]"}]}], ";"}], 
+   "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"ShiftListLen", " ", "=", " ", 
+     RowBox[{"Length", "[", "ShiftList", "]"}]}], ";"}], 
+   "\[IndentingNewLine]", 
+   RowBox[{"(*", " ", 
+    RowBox[{
+    "Create", " ", "the", " ", "array", " ", "that", " ", "will", " ", "hold",
+      " ", "the", " ", "determinant", " ", "results"}], " ", "*)"}], 
+   "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"DetRes", " ", "=", " ", 
+     RowBox[{"RandomInteger", "[", 
+      RowBox[{"0", ",", " ", 
+       RowBox[{"{", 
+        RowBox[{"ShiftListLen", ",", "2"}], "}"}]}], "]"}]}], ";"}], "\n", 
+   "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"For", " ", "[", 
+     RowBox[{
+      RowBox[{"shiftIdx", " ", "=", " ", "1"}], ",", " ", 
+      RowBox[{"shiftIdx", " ", "\[LessEqual]", " ", "ShiftListLen"}], ",", 
+      " ", 
+      RowBox[{"shiftIdx", " ", "++"}], ",", "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{"ShiftMatrix", " ", "=", " ", 
+        RowBox[{
+         RowBox[{"IdentityMatrix", "[", "20", "]"}], "*", 
+         RowBox[{"ShiftList", "[", 
+          RowBox[{"[", "shiftIdx", "]"}], "]"}]}]}], ";", 
+       "\[IndentingNewLine]", 
+       RowBox[{"DeterminantAvg", " ", "=", " ", "0"}], ";", 
+       "\[IndentingNewLine]", 
+       RowBox[{"For", " ", "[", 
+        RowBox[{
+         RowBox[{"runIdx", " ", "=", " ", "1"}], ",", " ", 
+         RowBox[{"runIdx", " ", "\[LessEqual]", " ", "1000"}], ",", " ", 
+         RowBox[{"runIdx", "++"}], ",", "\[IndentingNewLine]", 
+         RowBox[{"(*", " ", 
+          RowBox[{
+          "Generate", " ", "a", " ", "square", " ", "random", " ", "matrix", 
+           " ", "20", "x20"}], " ", "*)"}], "\[IndentingNewLine]", 
+         RowBox[{
+          RowBox[{"M1", "  ", "=", " ", 
+           RowBox[{"RandomReal", "[", 
+            RowBox[{"2.0", ",", 
+             RowBox[{"{", 
+              RowBox[{"20", ",", "20"}], "}"}]}], "]"}]}], ";", 
+          "\[IndentingNewLine]", "\[IndentingNewLine]", 
+          RowBox[{"(*", " ", 
+           RowBox[{"Impose", " ", "a", " ", "linear", " ", "dependence", " ", 
+            RowBox[{"(", 
+             RowBox[{"reduce", " ", "the", " ", "rank"}], ")"}], " ", 
+            "\[IndentingNewLine]", "  ", "Copy", " ", "row", " ", "2", " ", 
+            "to", " ", "row", " ", "1"}], " ", "*)"}], "\[IndentingNewLine]", 
+          RowBox[{
+           RowBox[{"M1", "[", 
+            RowBox[{"[", "1", "]"}], "]"}], " ", "=", " ", 
+           RowBox[{"M1", "[", 
+            RowBox[{"[", 
+             RowBox[{"2", ",", "All"}], "]"}], "]"}]}], ";", 
+          "\[IndentingNewLine]", 
+          RowBox[{"(*", " ", 
+           RowBox[{
+            RowBox[{"ReducedRankDet", " ", "=", " ", 
+             RowBox[{"Det", "[", "M1", "]"}]}], ";"}], "*)"}], 
+          "\[IndentingNewLine]", 
+          RowBox[{"M1", " ", "=", " ", 
+           RowBox[{"M1", " ", "+", " ", "ShiftMatrix"}]}], ";", 
+          "\[IndentingNewLine]", 
+          RowBox[{"DeterminantAvg", " ", "+=", " ", 
+           RowBox[{"Abs", "[", 
+            RowBox[{"Det", "[", "M1", "]"}], "]"}]}], ";"}]}], 
+        "\[IndentingNewLine]", "]"}], ";", "\[IndentingNewLine]", 
+       "\[IndentingNewLine]", 
+       RowBox[{"DeterminantAvg", " ", "=", " ", 
+        RowBox[{"DeterminantAvg", " ", "/", " ", "runIdx"}]}], ";", 
+       "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{"DetRes", "[", 
+         RowBox[{"[", 
+          RowBox[{"shiftIdx", ",", "1"}], "]"}], "]"}], " ", "=", " ", 
+        RowBox[{"ShiftList", "[", 
+         RowBox[{"[", "shiftIdx", "]"}], "]"}]}], ";", "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{"DetRes", "[", 
+         RowBox[{"[", 
+          RowBox[{"shiftIdx", ",", "2"}], "]"}], "]"}], " ", "=", " ", 
+        "DeterminantAvg"}], ";"}]}], "\[IndentingNewLine]", "]"}], ";"}], 
+   "\[IndentingNewLine]", 
+   RowBox[{"ListPlot", "[", 
+    RowBox[{"DetRes", ",", 
+     RowBox[{"AxesLabel", "\[Rule]", 
+      RowBox[{"{", 
+       RowBox[{"\"\<Shift Amount\>\"", ",", " ", "\"\<Determinant Avg\>\""}], 
+       "}"}]}]}], "]"}], "\n"}]}]], "Input",
+ CellGroupingRules->{"GroupTogetherGrouping", 10000.},
+ CellChangeTimes->{{3.8167967886899805`*^9, 3.8167967971661654`*^9}, 
+   3.8167968815366116`*^9, {3.816796979370621*^9, 3.8167970683954496`*^9}, {
+   3.816797206698806*^9, 3.8167973547957172`*^9}, {3.816797396516844*^9, 
+   3.816797405039074*^9}, {3.8167975770016136`*^9, 3.816797598356767*^9}, {
+   3.8167976460891533`*^9, 3.816797661518319*^9}, {3.8167977785626945`*^9, 
+   3.8167977933215656`*^9}, {3.8167978363954077`*^9, 3.81679790103599*^9}, {
+   3.816797972132244*^9, 3.816797976868626*^9}, {3.8167995186805644`*^9, 
+   3.8167995226871786`*^9}, {3.816799674242611*^9, 3.816799677488826*^9}, {
+   3.8167997169393682`*^9, 3.816799727373154*^9}, {3.816799904435408*^9, 
+   3.8167999622817707`*^9}, {3.8168001216526475`*^9, 
+   3.8168001509242706`*^9}, {3.8168001830011897`*^9, 3.81680018686374*^9}, {
+   3.816800241464588*^9, 3.816800259559387*^9}, {3.816800600130462*^9, 
+   3.8168006147538633`*^9}},
+ CellLabel->
+  "In[437]:=",ExpressionUUID->"f84f5baf-1b7f-44dc-af6e-bc87b4f28ca1"],
+
+Cell[BoxData[
+ GraphicsBox[{{}, 
+   {RGBColor[0.368417, 0.506779, 0.709798], PointSize[0.012833333333333334`], 
+    AbsoluteThickness[1.6], PointBox[CompressedData["
+1:eJxTTMoPSmViYGAQAWIQDQNcd8TarNQW2r6NaDS41Fdqr3hd1azPuNABwm+1
+3yMjXR2zu9FhE1PiElntCfbp4u1fGdq6ofJT7a8lP782P3yig8b6hXvaPs2y
+ty1g2sLxazpU/QJ71ivVb4+vn+lwXrfw1fc7i+w9ujcvvaq+AKp/qf1BccPZ
+6RcXO3C3TCxb47DCforQYTbn5Uuh5q2yf64sdyHq6QoHt1sbgSautV+g78ml
+dHU51PwN9lWzbt2847XSwVEi8zhXy0b7yvXXFObuXAW1b5O9cn0vSzTHZoc4
+50rep6Zb7HUWqHBVB2yA2r/V/v7WbsHoRxsdavI6g/c/32bPIW2fVJe0Geqe
+HfYnTgh0qfVsdZgJBjvtc85x3Xo9a7MDAAEplNQ=
+     "]]}, {{}, {}}},
+  AspectRatio->NCache[GoldenRatio^(-1), 0.6180339887498948],
+  Axes->{True, True},
+  AxesLabel->{
+    FormBox["\"Shift Amount\"", TraditionalForm], 
+    FormBox["\"Determinant Avg\"", TraditionalForm]},
+  AxesOrigin->{0, 0},
+  DisplayFunction->Identity,
+  Frame->{{False, False}, {False, False}},
+  FrameLabel->{{None, None}, {None, None}},
+  FrameTicks->{{Automatic, Automatic}, {Automatic, Automatic}},
+  GridLines->{None, None},
+  GridLinesStyle->Directive[
+    GrayLevel[0.5, 0.4]],
+  Method->{
+   "OptimizePlotMarkers" -> True, "OptimizePlotMarkers" -> True, 
+    "CoordinatesToolOptions" -> {"DisplayFunction" -> ({
+        Identity[
+         Part[#, 1]], 
+        Identity[
+         Part[#, 2]]}& ), "CopiedValueFunction" -> ({
+        Identity[
+         Part[#, 1]], 
+        Identity[
+         Part[#, 2]]}& )}},
+  PlotRange->{{0, 0.09999999999999999}, {0, 5516.150544213313}},
+  PlotRangeClipping->True,
+  PlotRangePadding->{{
+     Scaled[0.02], 
+     Scaled[0.02]}, {
+     Scaled[0.02], 
+     Scaled[0.05]}},
+  Ticks->{Automatic, Automatic}]], "Output",
+ CellChangeTimes->{
+  3.8168001950215545`*^9, {3.816800260929957*^9, 3.8168002673851757`*^9}, 
+   3.8168003253411627`*^9, {3.8168005827798653`*^9, 3.8168006157098846`*^9}},
+ CellLabel->
+  "Out[441]=",ExpressionUUID->"64e4bcff-0570-4a38-ae25-1c48e5b7bb73"]
+}, Open  ]]
+}, Open  ]]
+}, Open  ]]
+},
+WindowSize->{1152., 585.6},
+WindowMargins->{{
+  Automatic, -5.399999999999864}, {-5.399999999999977, Automatic}},
+FrontEndVersion->"12.1 for Microsoft Windows (64-bit) (June 19, 2020)",
+StyleDefinitions->"Default.nb",
+ExpressionUUID->"8dfee31b-27f5-4ff5-b959-d939e54caa1d"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[CellGroupData[{
+Cell[580, 22, 323, 8, 132, "Title",ExpressionUUID->"0620a840-d5ac-47a2-bac4-b7e3eafeb92f"],
+Cell[CellGroupData[{
+Cell[928, 34, 280, 6, 54, "Subsection",ExpressionUUID->"60316348-f3e0-424f-9b26-a5fd5d93957a"],
+Cell[CellGroupData[{
+Cell[1233, 44, 695, 12, 181, "Subsubsection",ExpressionUUID->"8e7ac4a2-cd75-4ece-abcc-3988dec2ee23"],
+Cell[1931, 58, 5394, 121, 536, "Input",ExpressionUUID->"f84f5baf-1b7f-44dc-af6e-bc87b4f28ca1",
+ CellGroupingRules->{"GroupTogetherGrouping", 10000.}],
+Cell[7328, 181, 1917, 48, 208, "Output",ExpressionUUID->"64e4bcff-0570-4a38-ae25-1c48e5b7bb73"]
+}, Open  ]]
+}, Open  ]]
+}, Open  ]]
+}
+]
+*)
+
