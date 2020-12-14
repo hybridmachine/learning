@@ -22,7 +22,9 @@ if abs(detM1) > 0
             positionSign = positionSign * -1; % Flip the sign for the next position
             
             MinorsComponentMatrix = M1;
+            
             % Now remove the row and column from the component matrix
+            % https://www.mathworks.com/help/matlab/math/removing-rows-or-columns-from-a-matrix.html
             MinorsComponentMatrix(M1Row,:) = [];
             MinorsComponentMatrix(:,M1Col) = [];
             
