@@ -12,8 +12,9 @@
 % find perpendicular component from first column and subtract it.
 
 m = 4;
-M1 = randi(100,m,m);
-MO = zeros(m,m);
+n = 4;
+M1 = randi(100,m,n);
+MO = zeros(m,n);
 % Find orthoginal is
 % 1) dot(v1,ref)/dot(ref,ref) * ref == parallel_component
 % 2) v1 - parallel_component
@@ -21,7 +22,7 @@ MO = zeros(m,m);
 
 MO(:,1) = M1(:,1); % first column of orth matrix is the starting matrix
 
-for ColIdx = 2:m
+for ColIdx = 2:n
     OrthIdx = ColIdx;
     ColVec = M1(:,ColIdx);
     MO(:,ColIdx) = ColVec;
@@ -34,9 +35,15 @@ for ColIdx = 2:m
 end
 
 % Q is the orthoginal unit matrix
-for ColIdx = 1:m
+for ColIdx = 1:n
     UnitCol = MO(:,ColIdx);
-    MO(:,ColIdx) = UnitCol / sqrt(dot(UnitCol,UnitCol));
+    % MO(:,ColIdx) = UnitCol / sqrt(dot(UnitCol,UnitCol));
+    
+    MO(:,ColIdx) = UnitCol / norm(UnitCol);
 end
 
+figure(1)
+image(M1);
 
+figure(2)
+image((MO' * MO));
