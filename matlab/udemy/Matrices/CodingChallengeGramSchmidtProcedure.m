@@ -43,7 +43,7 @@ for ColIdx = 1:n
 end
 
 figure(1)
-image(M1);
+imagesc(M1);
 
 figure(2)
-image((MO' * MO));
+imagesc((MO' * MO));
