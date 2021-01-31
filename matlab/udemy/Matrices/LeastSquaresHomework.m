@@ -22,6 +22,7 @@
 
 load("widget_data.mat")
 
+% Remember to include the intercept since the average isn't 0
 X = [ones(1,1000); data(1,:); data(2,:)]';
 y = data(3,:)';
 
