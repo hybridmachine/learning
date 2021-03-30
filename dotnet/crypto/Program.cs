@@ -13,10 +13,7 @@ public class EncryptDecryptExample
             return -1;
         }
 
-        //SHA256 passwordHasher = SHA256.Create();
-        //Encryption key used to encrypt the stream.
-        //The same value must be used to encrypt and decrypt the stream.
-        //byte[] key = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16 };
+        // The encryption key is a SHA256 of the password, allowing any length password to be used
         byte[] key = SHA256.HashData(Encoding.UTF8.GetBytes(args[2]));
         
         if (args[1] == "-e")
