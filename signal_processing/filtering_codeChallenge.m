@@ -5,13 +5,24 @@ load filtering_codeChallenge.mat;
 
 time = 1:length(x);
 npnts = length(time);
+hz = linspace(0,fs,length(time));
 
-subplot(2,1,1);
+% create figures
+figTimeSeries = figure(1);
+figTimeSeries.Name = 'Time Series';
+clf(figTimeSeries);
+
+figFilterKernels = figure(2);
+figFilterKernels.Name = 'Filter Kernels';
+clf(figFilterKernels);
+
+figure(figTimeSeries);
+subplot(3,1,1);
 plot(time,x,time,y);
+title('Unfiltered vs Reference Timeseries');
 
 xPow = fft(x);
 yPow = fft(y);
-
 
 
 % Looking at the target result, it looks like three filters
@@ -30,25 +41,25 @@ shape   = [ 1 1 0 0 ];
 frex    = [ 0 fcutoff fcutoff+fcutoff*transw fs/2 ] / (fs/2);
 
 % filter kernel
-filtkern = firls(order,frex,shape);
+lowpassFiltkern = firls(order,frex,shape);
 
 % its power spectrum
-filtkernX = abs(fft(filtkern,npnts)).^2;
+lowpassFiltkernX = abs(fft(lowpassFiltkern,npnts)).^2;
 
-figure(2), clf
+figure(figFilterKernels);
 subplot(321)
-plot((-order/2:order/2)/fs,filtkern,'k','linew',3)
+plot((-order/2:order/2)/fs,lowpassFiltkern,'k','linew',3)
 xlabel('Time (s)')
-title('Filter kernel')
+title('Low pass filter kernel')
 
 subplot(322), hold on
 plot(frex*fs/2,shape,'r','linew',1)
-plot(hz,filtkernX(1:length(hz)),'k','linew',2)
+plot(hz,lowpassFiltkernX(1:length(hz)),'k','linew',2)
 set(gca,'xlim',[0 60])
 xlabel('Frequency (Hz)'), ylabel('Gain')
-title('Filter kernel spectrum')
+title('Low pass filter kernel spectrum')
 
-xFilt = filtfilt(filtkern,1,x);
+xFilt = filtfilt(lowpassFiltkern,1,x);
 xFiltPow = fft(xFilt);
 
 
@@ -61,17 +72,17 @@ order   = round( 15*fs/fcutoff );
 highPassKern = fir1(order,5/(fs/2),'high'); 
 highPassKernX = abs(fft(highPassKern,npnts)).^2;
 
-figure('name','High Pass Filter'), clf
-subplot(321)
+figure(figFilterKernels);
+subplot(323)
 plot((-order/2:order/2)/fs,highPassKern,'k','linew',3)
 xlabel('Time (s)')
-title('Filter kernel')
+title('High pass filter kernel')
 
-subplot(322), hold on
+subplot(324), hold on
 plot(hz,highPassKernX(1:length(hz)),'k','linew',2)
 set(gca,'xlim',[0 60])
 xlabel('Frequency (Hz)'), ylabel('Gain')
-title('Filter kernel spectrum')
+title('High pass filter kernel spectrum')
 
 xFiltHigh = filtfilt(highPassKern,1,xFilt);
 xFiltHighPow = fft(xFiltHigh);
@@ -80,7 +91,7 @@ xFiltHighPow = fft(xFiltHigh);
 
 fcutoff = 15;
 notchLen = 7;
-transw  = .3;
+transw  = .35;
 order   = round( 18*fs/fcutoff );
 
 shape   = [ 1 1 0 0 1 1 ];
@@ -95,13 +106,13 @@ filtkernNotch = firls(order,frex,shape);
 % its power spectrum
 filtkernNotchX = abs(fft(filtkernNotch,npnts)).^2;
 
-figure('name', 'Notch Filter'), clf
-subplot(321)
+figure(figFilterKernels);
+subplot(325)
 plot((-order/2:order/2)/fs,filtkernNotch,'k','linew',3)
 xlabel('Time (s)')
 title('Notch filter kernel')
 
-subplot(322), hold on
+subplot(326), hold on
 plot(frex*fs/2,shape,'r','linew',1)
 plot(hz,filtkernNotchX(1:length(hz)),'k','linew',2)
 set(gca,'xlim',[0 60])
@@ -111,8 +122,13 @@ title('Notch filter kernel spectrum');
 notchFiltHigh = filtfilt(filtkernNotch,1,xFiltHigh);
 notchFiltHighPow = fft(notchFiltHigh);
 
-figure(1);
-subplot(2,1,2);
-hz = linspace(0,fs,length(time));
-plot(hz,abs(xPow),hz,abs(yPow),hz,abs(xFiltHighPow),hz,abs(notchFiltHighPow));
+figure(figTimeSeries);
+subplot(3,1,2);
+plot(time,y,time,notchFiltHigh);
+title('Reference vs Calculated');
+legend('Reference','Calculated');
+subplot(3,1,3);
+plot(hz,abs(xPow),hz,abs(yPow),hz,abs(notchFiltHighPow));
+legend('Unfiltered','Reference','Calculated');
 xlim([0 fs/2]);
+title('Power Spectrum');
