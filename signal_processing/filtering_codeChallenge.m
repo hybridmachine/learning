@@ -61,7 +61,7 @@ order   = round( 15*fs/fcutoff );
 highPassKern = fir1(order,5/(fs/2),'high'); 
 highPassKernX = abs(fft(highPassKern,npnts)).^2;
 
-figure(3), clf
+figure('name','High Pass Filter'), clf
 subplot(321)
 plot((-order/2:order/2)/fs,highPassKern,'k','linew',3)
 xlabel('Time (s)')
@@ -76,8 +76,43 @@ title('Filter kernel spectrum')
 xFiltHigh = filtfilt(highPassKern,1,xFilt);
 xFiltHighPow = fft(xFiltHigh);
 
+% Last up, notch filter
+
+fcutoff = 15;
+notchLen = 7;
+transw  = .3;
+order   = round( 18*fs/fcutoff );
+
+shape   = [ 1 1 0 0 1 1 ];
+fcutoffTransw = fcutoff+fcutoff*transw;
+notchEnd = fcutoff+notchLen;
+notchEndTransw = notchEnd+fcutoff*transw;
+frex    = [ 0 fcutoff fcutoffTransw notchEnd notchEndTransw fs/2 ] / (fs/2);
+
+% filter kernel
+filtkernNotch = firls(order,frex,shape);
+
+% its power spectrum
+filtkernNotchX = abs(fft(filtkernNotch,npnts)).^2;
+
+figure('name', 'Notch Filter'), clf
+subplot(321)
+plot((-order/2:order/2)/fs,filtkernNotch,'k','linew',3)
+xlabel('Time (s)')
+title('Notch filter kernel')
+
+subplot(322), hold on
+plot(frex*fs/2,shape,'r','linew',1)
+plot(hz,filtkernNotchX(1:length(hz)),'k','linew',2)
+set(gca,'xlim',[0 60])
+xlabel('Frequency (Hz)'), ylabel('Gain')
+title('Notch filter kernel spectrum');
+
+notchFiltHigh = filtfilt(filtkernNotch,1,xFiltHigh);
+notchFiltHighPow = fft(notchFiltHigh);
+
 figure(1);
 subplot(2,1,2);
 hz = linspace(0,fs,length(time));
-plot(hz,abs(xPow),hz,abs(yPow),hz,abs(xFiltHighPow));
+plot(hz,abs(xPow),hz,abs(yPow),hz,abs(xFiltHighPow),hz,abs(notchFiltHighPow));
 xlim([0 fs/2]);
