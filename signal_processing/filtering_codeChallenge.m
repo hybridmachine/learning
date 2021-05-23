@@ -9,11 +9,11 @@ hz = linspace(0,fs,length(time));
 
 % create figures
 figTimeSeries = figure(1);
-figTimeSeries.Name = 'Time Series';
+set(figTimeSeries, 'name','Time Series');
 clf(figTimeSeries);
 
 figFilterKernels = figure(2);
-figFilterKernels.Name = 'Filter Kernels';
+set(figFilterKernels,'name','Filter Kernels');
 clf(figFilterKernels);
 
 figure(figTimeSeries);
@@ -48,7 +48,7 @@ lowpassFiltkernX = abs(fft(lowpassFiltkern,npnts)).^2;
 
 figure(figFilterKernels);
 subplot(321)
-plot((-order/2:order/2)/fs,lowpassFiltkern,'k','linew',3)
+plot(lowpassFiltkern,'k','linew',3)
 xlabel('Time (s)')
 title('Low pass filter kernel')
 
@@ -74,7 +74,7 @@ highPassKernX = abs(fft(highPassKern,npnts)).^2;
 
 figure(figFilterKernels);
 subplot(323)
-plot((-order/2:order/2)/fs,highPassKern,'k','linew',3)
+plot(highPassKern,'k','linew',3)
 xlabel('Time (s)')
 title('High pass filter kernel')
 
@@ -108,7 +108,7 @@ filtkernNotchX = abs(fft(filtkernNotch,npnts)).^2;
 
 figure(figFilterKernels);
 subplot(325)
-plot((-order/2:order/2)/fs,filtkernNotch,'k','linew',3)
+plot(filtkernNotch,'k','linew',3)
 xlabel('Time (s)')
 title('Notch filter kernel')
 
