@@ -29,7 +29,7 @@ signal = ampl + noise;
 filtsig = zeros(size(signal));
 
 % implement the running mean filter
-k = 20; % filter window is actually k*2+1
+k = 30; % filter window is actually k*2+1
 for i=k+1:n-k-1
     % each point is the average of k surrounding points
     filtsig(i) = mean(signal(i-k:i+k));
@@ -49,7 +49,7 @@ smoothedFFT = cnvKernelFFT .* signalFFT;
 smoothedSignal = ifft(smoothedFFT);
 smoothedSignal = smoothedSignal(k+1:end-k); % Strip off the padding, this aligns the phase
 
-cnvSmoothed = conv(signal, cnvKernel,'same');
+cnvSmoothed = conv(signal, cnvKernel,'same'); % 'same' does what the padding does above, aligns phase only accounting for datapoints from the signal itself
 % compute window size in ms
 windowsize = 1000*(k*2+1) / srate;
 
