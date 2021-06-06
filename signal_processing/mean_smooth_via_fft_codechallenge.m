@@ -36,12 +36,13 @@ for i=k+1:n-k-1
 end
 
 % First find the equivalent convolution kernel
-% THe median is just the 1/npts * Sum(value of each point)
+% The median is just the 1/npts * Sum(value of each point)
 % This would be a square wave kernel with height 1/npts and width of npts
+signalLength = length(signal);
 cnvKernelWidth = (k*2)+1;
 fftPadding = cnvKernelWidth+signalLength-1; % Account for the extra width due to convolution, this will get stripped out below and re align the phase
 
-signalLength = length(signal);
+
 cnvKernel = ones(1,cnvKernelWidth) * 1/cnvKernelWidth;
 cnvKernelFFT = fft(cnvKernel, fftPadding);
 signalFFT = fft(signal,fftPadding);
@@ -57,7 +58,8 @@ windowsize = 1000*(k*2+1) / srate;
 % plot the noisy and filtered signals
 figure(1), clf, hold on
 % Plot with a little offset in each for easy visual comparison
-plot(time,signal, time,filtsig, time,cnvSmoothed .* 1.01 ,time,smoothedSignal .* 1.02,'linew',2)
+offset = 0.1;
+plot(time,signal, time,filtsig, time,cnvSmoothed + offset ,time,smoothedSignal + 2*offset,'linew',2)
 
 % draw a patch to indicate the window size
 tidx = dsearchn(time',1);
