@@ -86,14 +86,56 @@ title('Low pass filter kernel spectrum')
 sigFiltLowPass = filtfilt(lowPassKern,1,sigFiltHighPass);
 sigFiltLowPassX = abs(fft(sigFiltLowPass));
 
-figure(figFiltered)
 
-subplot(4,1,2);
-plot((1:numpts),sigFiltLowPass);
-xlim([0 numpts]);
-title('Calculated Filtered Signal');
 
 subplot(4,1,4);
 plot(hz,sigFiltLowPassX);
 xlim([0 30]);
 title('Calculated Filter Kernel');
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Morley wavelet 
+
+% parameters
+ffreq = 12.5;
+fwhm = .10; 
+wavTimeVec = -3:1/srate:3;
+
+% Transpose into column vector to match signal format in .mat format
+morWavelet = (cos(2*pi*ffreq*wavTimeVec) .* exp((-4*log(2)*wavTimeVec.^2) / fwhm.^2))';
+
+
+% Remember that the length of convolution plus the length of the filter
+% kernel minus 1
+nConv = numpts + length(wavTimeVec) - 1;
+convWingWidth = floor(length(wavTimeVec)/2)+1; % Used to trim of the wings of convolution
+% waveHz = linspace(0,srate/2,floor(length(waveTimeVec)/2)+1);
+morwavX = fft(morWavelet,nConv);
+% Normalize to avoid amplification
+
+morwavX = morwavX ./ max(morwavX);
+
+morwavFilteredFrequencyDomain = morwavX .* fft(signal,nConv);
+morwavFilteredTimeDomain = ifft(morwavFilteredFrequencyDomain);
+
+morwavFilteredTimeDomain = real(morwavFilteredTimeDomain(convWingWidth:end-convWingWidth+1));
+
+revFiltTimeDomain = flip(morwavFilteredTimeDomain);
+revFiltFreqDomain = morwavX .* fft(revFiltTimeDomain,nConv);
+
+% Filtering shifts the phase, unshift by flipping, filtering, re-flipping
+% back
+zeroPhaseTimeDomain = real(ifft(revFiltFreqDomain));
+zeroPhaseTimeDomain = zeroPhaseTimeDomain(convWingWidth:end-convWingWidth+1);
+zeroPhaseTimeDomain = flip(zeroPhaseTimeDomain);
+
+figure(figFiltered)
+
+subplot(4,1,2);
+plot((1:numpts),sigFiltLowPass,(1:numpts),zeroPhaseTimeDomain);
+xlim([0 numpts]);
+title('Calculated Filtered Signal');
+
+
+% plot(waveHz,morwavX(1:length(waveHz)));
+
