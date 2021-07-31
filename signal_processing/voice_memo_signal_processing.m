@@ -16,7 +16,7 @@ ylabel('Amplitude');
 title('Voice Memo Sample');
 xlim([0 timeLen]);
 
-% soundsc(y,Fs);
+soundsc(y,Fs);
 
 hz = (0:Fs);
 freqData = fft(y,length(hz));
