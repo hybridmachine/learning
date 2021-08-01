@@ -50,5 +50,46 @@ title([ 'Empirical FWHM: ' num2str(fwhmE) ])
 k = 3; % filter window is actually k*2+1
 
 fig = figure(2);
-fftMeanSmooth(k,x,fx,fig);
+smoothedSignal = fftMeanSmooth(k,x,fx,fig);
 
+interpolater = griddedInterpolant(x, smoothedSignal, 'spline');
+srate = 1000;
+npts = srate * max(x);
+timevec = (0:npts-1)/srate; % 1 second)
+interpolatedSignal = interpolater(timevec);
+
+plot(timevec,interpolatedSignal, 'b', 'linew', 3);
+
+
+% normalization necessary here!
+fxNorm = interpolatedSignal./max(interpolatedSignal);
+
+% find peak point
+peakpnt = find( fxNorm==max(fxNorm) );
+
+
+% find 50% PREpeak point
+prepeak = dsearchn(fxNorm(1:peakpnt)',.5);
+
+
+% find 50% POSTpeak point
+pstpeak = dsearchn(fxNorm(peakpnt:end)',.5);
+pstpeak = pstpeak + peakpnt - 1; % adjust
+
+% compute empirical FWHM
+fwhmE = timevec(pstpeak) - timevec(prepeak);
+
+
+
+% plot the points
+plot(timevec(peakpnt),interpolatedSignal(peakpnt),'ko','markerfacecolor','r','markersize',15)
+plot(timevec(prepeak),interpolatedSignal(prepeak),'ko','markerfacecolor','g','markersize',15)
+plot(timevec(pstpeak),interpolatedSignal(pstpeak),'ko','markerfacecolor','g','markersize',15)
+
+
+% plot line for reference
+plot(timevec([prepeak pstpeak]),interpolatedSignal([prepeak pstpeak]),'k--')
+plot([1 1]*timevec(prepeak),[0 interpolatedSignal(prepeak)],'k:')
+plot([1 1]*timevec(pstpeak),[0 interpolatedSignal(pstpeak)],'k:')
+
+title([ 'Smoothed Empirical FWHM: ' num2str(fwhmE) ])
