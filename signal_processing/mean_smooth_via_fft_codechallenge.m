@@ -18,7 +18,7 @@ n     = length(time);
 p     = 15; % poles for random interpolation
 
 % noise level, measured in standard deviations
-noiseamp = 5; 
+noiseamp = 5;
 
 % amplitude modulator and noise level
 ampl   = interp1(rand(p,1)*30,linspace(1,p,n));
