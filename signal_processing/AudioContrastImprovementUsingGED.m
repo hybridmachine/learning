@@ -25,8 +25,6 @@ SignalAmp = 2;
 
 SampleRate = 2400; % Sampling hz
 Nyquist = SampleRate / 2 ;
-NumFrequencyChan = Nyquist; % One channel per hz
-Frequencies = linspace(0,Nyquist,NumFrequencyChan);
 
 PlaySeconds = 3; % We'll use 3 for baseline and mix in voice for the last 3 seconds
 SignalLength = SampleRate * PlaySeconds;
@@ -38,11 +36,11 @@ AudioData(1,SignalInjectionTime:end) = AudioData(1,SignalInjectionTime:end) + (S
 
 AudioDataFFT = fft(AudioData);
 AllPower = abs(AudioDataFFT/SignalLength);
-NyquistPower = AllPower(1:((SignalLength/2)+1));
-NyquistPower(2:end-1) = 2*NyquistPower(2:end-1); % To account for positive and negative energies in signal
+FrequencyPower = AllPower(1:((SignalLength/2)+1));
+FrequencyPower(2:end-1) = 2*FrequencyPower(2:end-1); % To account for positive and negative energies in signal
 Frequency = SampleRate*(0:(SignalLength/2))/SignalLength;
 figure(1)
-plot(Frequency,NyquistPower);
+plot(Frequency,FrequencyPower);
 xlim([0 500])
 
 figure(2)
