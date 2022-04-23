@@ -60,7 +60,7 @@ end
 pcaEigVec = pcaEigVec(:,sidx);
 percentVarianceExplained = 100*(pcaEigVals / (sum (pcaEigVals)));
 
-pctVarExpThreshold = 1.0; 
+pctVarExpThreshold = 1.0;
 componentsToKeep = percentVarianceExplained > pctVarExpThreshold;
 activePcaEigVecs = pcaEigVec(:,componentsToKeep);
 componentDataNbrChans = sum(componentsToKeep);
@@ -104,16 +104,24 @@ gedComponentMaps = gedEigVec' * gedSmatrixAvg * activePcaEigVecs';
 %Adjust sign
 for i = 1:componentDataNbrChans
     [~,idx]       = max( abs(gedComponentMaps(i,:)) );
-    gedComponentMaps(i,:) = gedComponentMaps(i,:) * sign(gedComponentMaps(i,idx)); 
-    meanGedComponentTimeSeries = meanGedComponentTimeSeries * sign(gedComponentMaps(i,idx)); 
+    gedComponentMaps(i,:) = gedComponentMaps(i,:) * sign(gedComponentMaps(i,idx));
+    meanGedComponentTimeSeries = meanGedComponentTimeSeries * sign(gedComponentMaps(i,idx));
 end
 
 colormap jet
 
-subplot(2,1,1)
+subplot(2,2,1)
 topoplotIndie(gedComponentMaps(1,:),EEG.chanlocs,'numcontour',0);
 
-subplot(2,1,2)
+subplot(2,2,2)
+plot(gedSortedEigVal,'Marker','s','MarkerFaceColor','blue');
+ylim([0 0.2]);
+xlim([0 40]);
+xlabel('Component number');
+ylabel('\lambda');
+title('Eigenspectrum');
+
+subplot(2,2,[3 4])
 plot(EEG.times, meanGedComponentTimeSeries);
 xlabel('Time (ms)'), ylabel('Activity')
 set(gca, 'XLim',[-200, 1000], 'fontsize',18)
