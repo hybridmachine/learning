@@ -1,0 +1,6 @@
+# compile vhdl design source files
+vhdl xil_defaultlib  \
+"../../../../VHDL_LabAssignment1.srcs/sources_1/new/SeventBitChipSelect.vhd" \
+
+# Do not sort compile order
+nosort
