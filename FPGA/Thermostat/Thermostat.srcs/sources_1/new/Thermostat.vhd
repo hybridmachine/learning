@@ -24,7 +24,7 @@ use IEEE.STD_LOGIC_1164.ALL;
 
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values
---use IEEE.NUMERIC_STD.ALL;
+use IEEE.NUMERIC_STD.ALL;
 
 -- Uncomment the following library declaration if instantiating
 -- any Xilinx leaf cells in this code.
@@ -32,22 +32,48 @@ use IEEE.STD_LOGIC_1164.ALL;
 --use UNISIM.VComponents.all;
 
 entity Thermostat is
- Port ( signal vectorIn : in STD_LOGIC_VECTOR(6 downto 0); 
-        signal vectorOut : out STD_LOGIC_VECTOR(6 downto 0);
-         displaySel : in STD_LOGIC );
+ Port ( desiredTemp : in STD_LOGIC_VECTOR(6 downto 0);
+        currentTemp : in STD_LOGIC_VECTOR(6 downto 0); 
+        displayedTemp : out STD_LOGIC_VECTOR(6 downto 0);
+        displaySel : in STD_LOGIC;
+        acControlSwitch : in STD_LOGIC;
+        heatControlSwitch : in STD_LOGIC;
+        acPowerControl : out STD_LOGIC;
+        heatPowerControl : out STD_LOGIC );
 end Thermostat;
 
 architecture Behavioral of Thermostat is
-    -- Dummy test values to test the display selection
-    signal vector2 : STD_LOGIC_VECTOR(6 downto 0) := "0010100"; -- Dummy 20 C value
 begin
 
-    process(displaySel, vectorIn)
+    process(displaySel, desiredTemp, currentTemp)
     begin
         if displaySel = '0' then
-            vectorOut <= vectorIn;
+            displayedTemp <= desiredTemp;
         else
-            vectorOut <= vector2;
+            displayedTemp <= currentTemp;
         end if;
+    end process;
+    
+    process(acControlSwitch, heatControlSwitch, currentTemp, desiredTemp)
+    begin
+        -- Default to off , set power state based on switch and temp state
+        -- This way if user switches from cool to heat or vice versa, we'll turn off the opposite
+        -- mode by default
+        acPowerControl <= '0';
+        heatPowerControl <= '0';
+        
+        if acControlSwitch = '1' then
+            if unsigned(currentTemp) > unsigned(desiredTemp) then
+                acPowerControl <= '1';
+            else
+                acPowerControl <= '0';
+            end if;
+        elsif heatControlSwitch = '1' then
+            if unsigned(currentTemp) < unsigned(desiredTemp) then
+                heatPowerControl <= '1';
+            else
+                heatPowerControl <= '0';
+            end if;
+        end if; 
     end process;
 end Behavioral;
