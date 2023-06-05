@@ -62,7 +62,7 @@ architecture Behavioral of Thermostat is
 begin
 
     -- Input flipflops
-    process(clk, reset, desiredTemp_reg, currentTemp_reg, displaySel_reg, acControlSwitch_reg, heatControlSwitch_reg)
+    process(clk, reset)
     begin
         if reset = '0' then
             desiredTemp_reg <= (others => '0');
@@ -86,7 +86,7 @@ begin
     end process;
 
     -- Output flipflops
-    process(clk, reset, displayedTemp_reg, acPowerControl_reg, heatPowerControl_reg)
+    process(clk, reset)
     begin
         if reset = '0' then
             displayedTemp <= (others => '0');
@@ -99,16 +99,20 @@ begin
         end if;
     end process;
     
-    process(displaySel_reg, desiredTemp_reg, currentTemp_reg)
+    process(clk)
     begin 
-        if displaySel_reg = '0' then
-            displayedTemp_reg <= desiredTemp_reg;
+        if (clk'event and clk='1') then
+            if displaySel_reg = '0' then
+                displayedTemp_reg <= desiredTemp_reg;
+            else
+                displayedTemp_reg <= currentTemp_reg;
+            end if;
         else
-            displayedTemp_reg <= currentTemp_reg;
+            displayedTemp_reg <= displayedTemp_reg;
         end if;
     end process;
     
-    process(reset, currentTemp_reg, desiredTemp_reg, acControlSwitch_reg, heatControlSwitch_reg)
+    process(reset, clk)
     begin   
     
         if reset = '0' then    
@@ -116,7 +120,7 @@ begin
             acPowerControl_reg <= '0';
             heatPowerControl_reg <= '0';
    
-        else 
+        elsif (clk'event and clk='1') then
             if acControlSwitch_reg = '1' then
                 if unsigned(currentTemp_reg) > unsigned(desiredTemp_reg) then
                     acPowerControl_reg <= '1';
@@ -129,7 +133,10 @@ begin
                 else
                     heatPowerControl_reg <= '0';
                 end if;
-            end if; 
+            end if;
+        else
+             heatPowerControl_reg <= heatPowerControl_reg;
+             acPowerControl_reg <= acPowerControl_reg;
         end if;
     end process;
 end Behavioral;
