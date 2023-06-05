@@ -44,7 +44,8 @@ architecture Behavioral of T_Thermostat is
                 heatControlSwitch : in STD_LOGIC;
                 acPowerControl : out STD_LOGIC;
                 heatPowerControl : out STD_LOGIC;
-                clk : in STD_LOGIC );
+                clk : in STD_LOGIC;
+                reset : in STD_LOGIC );
         end component;
         
         signal T_CURRENT_TEMP, T_DESIRED_TEMP : STD_LOGIC_VECTOR(6 downto 0);
@@ -55,6 +56,7 @@ architecture Behavioral of T_Thermostat is
         signal T_AC_PWR_CTRL : STD_LOGIC;
         signal T_HEAT_PWR_CTRL : STD_LOGIC;
         signal T_CLK : STD_LOGIC;
+        signal T_RESET : STD_LOGIC;
 begin
 
     UUT: Thermostat port map (currentTemp => T_CURRENT_TEMP,
@@ -65,7 +67,8 @@ begin
                               heatControlSwitch => T_HEAT_CTRL_SWITCH,
                               acPowerControl => T_AC_PWR_CTRL,
                               heatPowerControl => T_HEAT_PWR_CTRL,
-                              clk => T_CLK);
+                              clk => T_CLK,
+                              reset => T_RESET);
 
     process 
     begin
@@ -77,6 +80,11 @@ begin
     
     process
     begin
+        T_RESET <= '0'; -- Send reset
+        wait for 50ns;
+        T_RESET <= '1'; -- Begin normal operation
+        wait for 50ns;
+        
         -- Test display select function
         T_AC_CTRL_SWITCH <= '0'; -- AC off
         T_HEAT_CTRL_SWITCH <= '0'; -- HEAT off
@@ -98,7 +106,7 @@ begin
         T_HEAT_CTRL_SWITCH <= '0'; -- HEAT off
         T_CURRENT_TEMP <= "0011001"; -- 25C
         T_DESIRED_TEMP <= "0010110"; -- 22C
-        wait for 30ns; 
+        wait for 50ns; 
         assert T_AC_PWR_CTRL = '1' report "AC Power was expected on" severity failure;
         assert T_HEAT_PWR_CTRL = '0' report "Heat Power was expected off" severity failure;
         T_CURRENT_TEMP <= "0011000"; -- 24C

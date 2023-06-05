@@ -40,7 +40,8 @@ entity Thermostat is
         heatControlSwitch : in STD_LOGIC;
         acPowerControl : out STD_LOGIC;
         heatPowerControl : out STD_LOGIC;
-        clk : in STD_LOGIC );
+        clk : in STD_LOGIC;
+        reset : in STD_LOGIC );
 end Thermostat;
 
 architecture Behavioral of Thermostat is
@@ -61,9 +62,15 @@ architecture Behavioral of Thermostat is
 begin
 
     -- Input flipflops
-    process(clk, desiredTemp, currentTemp, displaySel, acControlSwitch, heatControlSwitch)
+    process(clk, reset, desiredTemp_reg, currentTemp_reg, displaySel_reg, acControlSwitch_reg, heatControlSwitch_reg)
     begin
-        if clk'event and clk = '1' then
+        if reset = '0' then
+            desiredTemp_reg <= (others => '0');
+            currentTemp_reg <= (others => '0');
+            displaySel_reg <= '0';
+            acControlSwitch_reg <= '0';
+            heatControlSwitch_reg <= '0';
+        elsif clk'event and clk = '1' then
             desiredTemp_reg <= desiredTemp;
             currentTemp_reg <= currentTemp;
             displaySel_reg <= displaySel;
@@ -79,16 +86,16 @@ begin
     end process;
 
     -- Output flipflops
-    process(clk, acPowerControl_reg, heatPowerControl_reg, displayedTemp_reg)
+    process(clk, reset, displayedTemp_reg, acPowerControl_reg, heatPowerControl_reg)
     begin
-        if clk'event and clk = '1' then
+        if reset = '0' then
+            displayedTemp <= (others => '0');
+            acPowerControl <= '0';
+            heatPowerControl <= '0';
+        elsif clk'event and clk = '1' then
             displayedTemp <= displayedTemp_reg;
             acPowerControl <= acPowerControl_reg;
             heatPowerControl <= heatPowerControl_reg;
-        --else
-        --    acPowerControl_reg <= acPowerControl_reg;
-        --    heatPowerControl_reg <= heatPowerControl_reg;
-        --    displayedTemp_reg <= displayedTemp_reg;
         end if;
     end process;
     
@@ -101,26 +108,28 @@ begin
         end if;
     end process;
     
-    process(acControlSwitch_reg, heatControlSwitch_reg, currentTemp_reg, desiredTemp_reg)
-    begin       
-        -- Default to off , set power state based on switch and temp state
-        -- This way if user switches from cool to heat or vice versa, we'll turn off the opposite
-        -- mode by default
-        acPowerControl_reg <= '0';
-        heatPowerControl_reg <= '0';
-        
-        if acControlSwitch_reg = '1' then
-            if unsigned(currentTemp_reg) > unsigned(desiredTemp_reg) then
-                acPowerControl_reg <= '1';
-            else
-                acPowerControl_reg <= '0';
-            end if;
-        elsif heatControlSwitch_reg = '1' then
-            if unsigned(currentTemp_reg) < unsigned(desiredTemp_reg) then
-                heatPowerControl_reg <= '1';
-            else
-                heatPowerControl_reg <= '0';
-            end if;
-        end if; 
+    process(reset, currentTemp_reg, desiredTemp_reg, acControlSwitch_reg, heatControlSwitch_reg)
+    begin   
+    
+        if reset = '0' then    
+            -- Default to off 
+            acPowerControl_reg <= '0';
+            heatPowerControl_reg <= '0';
+   
+        else 
+            if acControlSwitch_reg = '1' then
+                if unsigned(currentTemp_reg) > unsigned(desiredTemp_reg) then
+                    acPowerControl_reg <= '1';
+                else
+                    acPowerControl_reg <= '0';
+                end if;
+            elsif heatControlSwitch_reg = '1' then
+                if unsigned(currentTemp_reg) < unsigned(desiredTemp_reg) then
+                    heatPowerControl_reg <= '1';
+                else
+                    heatPowerControl_reg <= '0';
+                end if;
+            end if; 
+        end if;
     end process;
 end Behavioral;
