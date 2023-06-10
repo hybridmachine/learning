@@ -3,6 +3,7 @@ import time
 import machine
 from cosmic import CosmicUnicorn
 from picographics import PicoGraphics, DISPLAY_COSMIC_UNICORN as DISPLAY
+import random
 
 graphics = None
 palette = None
@@ -42,7 +43,7 @@ def GoL_FindNextBitState(currentBitState, neighborCount):
 
 def GoL_CalcNextGen(CurrentGen = [], NextGen = []):
     colCount = 32 # TODO make this dynamic
-    rowCount = len(CurrentGen)
+    rowCount = len(CurrentGen) # assumes CurrentGen is same size as NextGen
     # Top left is 0,0 growing to rowCount,colCount bottom right of playfield
     
     for row in range(rowCount):
@@ -50,38 +51,28 @@ def GoL_CalcNextGen(CurrentGen = [], NextGen = []):
         for col in range(colCount):
             shiftCnt = colCount - col
             neighborBitCnt = 0
-            currentBit = 1 if ((CurrentGen[rowCount] & (1 << shiftCnt)) > 0) else 0
+            currentBit = 1 if ((CurrentGen[row] & (1 << shiftCnt)) > 0) else 0
             
             for nbrRow in range(-1,2,1): # Check row above, current and below -> -1, 0, 1
-                if ((row - nbrRow) > 0) and ((row + nbrRow) < rowCount):
+                if ((row + nbrRow) > 0) and ((row + nbrRow) < rowCount):
                     for nbrCol in range (-1,2,1): # Check col left, current and right -> -1, 0, 1
                         if ((col - nbrCol)) > 0 and ((col + nbrCol) < colCount):
                             shiftCnt = (colCount - (col + nbrCol))
                             neighborBitCnt = neighborBitCnt + (1 if ((CurrentGen[row + nbrRow] & (1 << shiftCnt)) > 0) else 0)
                         
-                    print("{0:032b}".format(CurrentGen[row]))
-        
-def GoL_FindNeighborCount(TwoDBitContext):
-    nextGenRowMask = 0b111
-
-    ngRowTop = TwoDBitContext[0] & nextGenRowMask
-
-    ngRowMid = TwoDBitContext[1] & nextGenRowMask
-    bitUnderConsideration = (ngRowMid >> 1) & 1
-    ngRowMid = ngRowMid & 0b101
-
-    ngRowBottom = TwoDBitContext[2] & nextGenRowMask
-    neighborCount = 0
-    for idx in range(0,3,1):
-        neighborCount = neighborCount + ((ngRowTop >> idx) & 1)
-        neighborCount = neighborCount + ((ngRowMid >> idx) & 1)
-        neighborCount = neighborCount + ((ngRowBottom >> idx) & 1)
-        
-    print("Neighborcount {0}".format(neighborCount))
-    print("bitFuture {0}".format(GoL_FindNextBitState(bitUnderConsideration, neighborCount)))
-    return neighborCount
-
+            neighborBitCnt = neighborBitCnt - currentBit # Remove current bit from count (noop if it was off)
+            
+                
+            nextGenBit = GoL_FindNextBitState(currentBit, neighborBitCnt)
+            #if (neighborBitCnt > 0):
+            #   print("NbrCnt: {0}, {1}".format(neighborBitCnt, nextGenBit))
+            shiftCnt = colCount - col
+            NextGen[row] = NextGen[row] | (nextGenBit << shiftCnt)
+            
 def GoL_InitR_Pentomino(playbrd):
+    for idx in range(len(playbrd)):
+        playbrd[idx] = 0b0
+        
     playbrd[15] = 0b00000000000000011000000000000000
     playbrd[16] = 0b00000000000000110000000000000000
     playbrd[17] = 0b00000000000000010000000000000000
@@ -91,7 +82,7 @@ def GoL_DisplayOnCosmicUnicorn(playbrd):
     # render the heat values to the graphics buffer
     for y in range(CosmicUnicorn.HEIGHT):
         for x in range(CosmicUnicorn.WIDTH):
-            bitVal = (playbrd[y] >> x) & 1
+            bitVal = 1 if ((playbrd[y] & (1 << x)) > 0) else 0
             
             if bitVal == 1:
                 graphics.set_pen(palette[3])
@@ -114,35 +105,20 @@ playBoard[1] = array.array("I", 0 for x in range(0, 32))
 
 GoL_InitR_Pentomino(playBoard[currentIdx])
 
-currentTop =    0b000000
-currentMid =    0b001111
-currentBottom = 0b110110
-
-nextGenRowMask = 0b111
-
-ngRowTop = currentTop & nextGenRowMask
-
-ngRowMid = currentMid & nextGenRowMask
-bitUnderConsideration = (ngRowMid >> 1) & 1
-ngRowMid = ngRowMid & 0b101
-
-ngRowBottom = currentBottom & nextGenRowMask
-
-currentTop = currentTop >> 3
-currentMid = currentMid >> 3
-currentBottom = currentBottom >> 3
-
-
-    
-
-print("bitUnderConsideration {0}".format(bitUnderConsideration))
-print("playboardSize {0}".format(len(playBoard[currentIdx])))
-
-GoL_CalcNextGen(playBoard[currentIdx], playBoard[futureIdx])
-    
-#print("playboard {0:b}".format(playBoard[currentIdx]))
-
+frameCount = 0
 while True:
+    GoL_CalcNextGen(playBoard[currentIdx], playBoard[futureIdx])
     GoL_DisplayOnCosmicUnicorn(playBoard[currentIdx])
-    time.sleep(2)
-
+    #time.sleep(0.035)
+    GoL_DisplayOnCosmicUnicorn(playBoard[futureIdx])
+    #time.sleep(0.030)
+    swapIdx = currentIdx
+    currentIdx = futureIdx
+    futureIdx = swapIdx
+    frameCount = frameCount + 1
+    
+    if frameCount > 100:
+        frameCount = 0
+        GoL_InitR_Pentomino(playBoard[currentIdx])
+        GoL_InitR_Pentomino(playBoard[futureIdx])
+        palette[3] = graphics.create_pen(random.randint(0, 254), random.randint(0, 254), random.randint(0, 254))
