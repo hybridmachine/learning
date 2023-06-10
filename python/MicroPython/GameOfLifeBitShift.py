@@ -40,17 +40,46 @@ def GoL_FindNextBitState(currentBitState, neighborCount):
             return 0
 
 
+def GoL_CalcNextGen(CurrentGen = [], NextGen = []):
+    colCount = 32 # TODO make this dynamic
+    rowCount = len(CurrentGen)
+    # Top left is 0,0 growing to rowCount,colCount bottom right of playfield
+    
+    for row in range(rowCount):
+        NextGen[row] = 0 #Blank out the future gen row
+        for col in range(colCount):
+            shiftCnt = colCount - col
+            neighborBitCnt = 0
+            currentBit = 1 if ((CurrentGen[rowCount] & (1 << shiftCnt)) > 0) else 0
+            
+            for nbrRow in range(-1,2,1): # Check row above, current and below -> -1, 0, 1
+                if ((row - nbrRow) > 0) and ((row + nbrRow) < rowCount):
+                    for nbrCol in range (-1,2,1): # Check col left, current and right -> -1, 0, 1
+                        if ((col - nbrCol)) > 0 and ((col + nbrCol) < colCount):
+                            shiftCnt = (colCount - (col + nbrCol))
+                            neighborBitCnt = neighborBitCnt + (1 if ((CurrentGen[row + nbrRow] & (1 << shiftCnt)) > 0) else 0)
+                        
+                    print("{0:032b}".format(CurrentGen[row]))
+        
 def GoL_FindNeighborCount(TwoDBitContext):
     nextGenRowMask = 0b111
 
-    ngRowTop = currentTop & nextGenRowMask
+    ngRowTop = TwoDBitContext[0] & nextGenRowMask
 
-    ngRowMid = currentMid & nextGenRowMask
+    ngRowMid = TwoDBitContext[1] & nextGenRowMask
     bitUnderConsideration = (ngRowMid >> 1) & 1
     ngRowMid = ngRowMid & 0b101
 
-    ngRowBottom = currentBottom & nextGenRowMask
-  
+    ngRowBottom = TwoDBitContext[2] & nextGenRowMask
+    neighborCount = 0
+    for idx in range(0,3,1):
+        neighborCount = neighborCount + ((ngRowTop >> idx) & 1)
+        neighborCount = neighborCount + ((ngRowMid >> idx) & 1)
+        neighborCount = neighborCount + ((ngRowBottom >> idx) & 1)
+        
+    print("Neighborcount {0}".format(neighborCount))
+    print("bitFuture {0}".format(GoL_FindNextBitState(bitUnderConsideration, neighborCount)))
+    return neighborCount
 
 def GoL_InitR_Pentomino(playbrd):
     playbrd[15] = 0b00000000000000011000000000000000
@@ -103,17 +132,15 @@ currentTop = currentTop >> 3
 currentMid = currentMid >> 3
 currentBottom = currentBottom >> 3
 
-neighborCount = 0
-for idx in range(0,3,1):
-    neighborCount = neighborCount + ((ngRowTop >> idx) & 1)
-    neighborCount = neighborCount + ((ngRowMid >> idx) & 1)
-    neighborCount = neighborCount + ((ngRowBottom >> idx) & 1)
+
     
-print("Neighborcount {0}".format(neighborCount))
+
 print("bitUnderConsideration {0}".format(bitUnderConsideration))
-print("bitFuture {0}".format(GoL_FindNextBitState(bitUnderConsideration, neighborCount)))
 print("playboardSize {0}".format(len(playBoard[currentIdx])))
-print("playboard {0}".format(playBoard[currentIdx]))
+
+GoL_CalcNextGen(playBoard[currentIdx], playBoard[futureIdx])
+    
+#print("playboard {0:b}".format(playBoard[currentIdx]))
 
 while True:
     GoL_DisplayOnCosmicUnicorn(playBoard[currentIdx])
