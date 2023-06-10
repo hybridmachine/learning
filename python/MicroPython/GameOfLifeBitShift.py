@@ -51,14 +51,18 @@ def GoL_CalcNextGen(CurrentGen = [], NextGen = []):
         for col in range(colCount):
             shiftCnt = colCount - col
             neighborBitCnt = 0
-            currentBit = 1 if ((CurrentGen[row] & (1 << shiftCnt)) > 0) else 0
+            if CurrentGen[row] == 0:
+                currentBit = 0
+            else:
+                currentBit = 1 if ((CurrentGen[row] & (1 << shiftCnt)) > 0) else 0
             
             for nbrRow in range(-1,2,1): # Check row above, current and below -> -1, 0, 1
                 if ((row + nbrRow) > 0) and ((row + nbrRow) < rowCount):
-                    for nbrCol in range (-1,2,1): # Check col left, current and right -> -1, 0, 1
-                        if ((col - nbrCol)) > 0 and ((col + nbrCol) < colCount):
-                            shiftCnt = (colCount - (col + nbrCol))
-                            neighborBitCnt = neighborBitCnt + (1 if ((CurrentGen[row + nbrRow] & (1 << shiftCnt)) > 0) else 0)
+                    if CurrentGen[row + nbrRow] > 0:
+                        for nbrCol in range (-1,2,1): # Check col left, current and right -> -1, 0, 1
+                            if ((col - nbrCol)) > 0 and ((col + nbrCol) < colCount):
+                                shiftCnt = (colCount - (col + nbrCol))
+                                neighborBitCnt = neighborBitCnt + (1 if ((CurrentGen[row + nbrRow] & (1 << shiftCnt)) > 0) else 0)
                         
             neighborBitCnt = neighborBitCnt - currentBit # Remove current bit from count (noop if it was off)
             
@@ -107,8 +111,15 @@ GoL_InitR_Pentomino(playBoard[currentIdx])
 
 frameCount = 0
 while True:
+    #tStart = time.ticks_ms()
     GoL_CalcNextGen(playBoard[currentIdx], playBoard[futureIdx])
+    #tEnd = time.ticks_ms()
+    #print(tEnd - tStart)
+    
+    #tStart = time.ticks_ms()
     GoL_DisplayOnCosmicUnicorn(playBoard[currentIdx])
+    #tEnd = time.ticks_ms()
+    #print(tEnd - tStart)
     #time.sleep(0.035)
     GoL_DisplayOnCosmicUnicorn(playBoard[futureIdx])
     #time.sleep(0.030)
@@ -122,3 +133,4 @@ while True:
         GoL_InitR_Pentomino(playBoard[currentIdx])
         GoL_InitR_Pentomino(playBoard[futureIdx])
         palette[3] = graphics.create_pen(random.randint(0, 254), random.randint(0, 254), random.randint(0, 254))
+
