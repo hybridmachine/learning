@@ -51,10 +51,10 @@ architecture Behavioral of Thermostat is
 
     type HVAC_MODE is ( IDLE,           -- No cooling or heating needed, standing by. 
                         COOL_ON,        -- Cool mode turned on and temp above set point
-                        COOL_RDY,       -- Cool mode on, temp above set point and system cool enough to start fan
+                        COOL_RDY,       -- Cool mode on, temp above set point and system will start fan when cool enough
                         COOL_COMPLETE,  -- Cooling is complete, will turn off fan and go to idle when AC cool enough signal goes low
                         HEAT_ON,        -- Heat mode on, temp below set point
-                        HEAT_RDY,       -- Heat mode on, hot enought to start fan
+                        HEAT_RDY,       -- Heat mode on, system will start fan when hot enough
                         HEAT_COMPLETE   -- Heating is complete, will turn off fan and go to idle when heater warm enough goes low
                         ); 
     
@@ -79,29 +79,30 @@ architecture Behavioral of Thermostat is
     
 begin
 
-    -- Unclocked thermostat state machine
-    process(reset, desiredTemp_reg,currentTemp_reg,acControlSwitch_reg,heatControlSwitch_reg,furnaceHotStatus_reg,acColdStatus_reg)
+    -- Clocked thermostat state machine
+    process(
+        clk,
+        reset,
+        desiredTemp_reg,
+        currentTemp_reg,
+        acControlSwitch_reg,
+        heatControlSwitch_reg,
+        furnaceHotStatus_reg,
+        acColdStatus_reg)
     begin
-    if reset = '0' then    
+        if reset = '0' then    
             -- Default to off 
-            acPowerControl_reg <= '0';
-            heatPowerControl_reg <= '0';
             displayedTemp_reg <= "0000000";          
             HVAC_NEXT_STATE <= IDLE;
             acPowerControl_reg <= '0';
             heatPowerControl_reg <= '0';
             fanPowerControl_reg <= '0';
-            
-        else 
+        elsif (clk'event and clk = '1') then            
             case HVAC_CURRENT_STATE is
-                when IDLE => 
-                    acPowerControl_reg <= '0';
-                    heatPowerControl_reg <= '0';
-                    fanPowerControl_reg <= '0';
-                    
+                when IDLE =>  
                     if acControlSwitch_reg = '1' then
                         HVAC_NEXT_STATE <= COOL_ON;
-                    elsif heatPowerControl_reg = '1' then
+                    elsif heatControlSwitch_reg = '1' then
                         HVAC_NEXT_STATE <= HEAT_ON;
                     else
                         HVAC_NEXT_STATE <= IDLE;
@@ -112,26 +113,30 @@ begin
                             acPowerControl_reg <= '1';
                             HVAC_NEXT_STATE <= COOL_RDY;
                         else
-                            HVAC_NEXT_STATE <= IDLE; -- Go back to idle, will transition back to cool_on and check temp again on next cycle
+                            HVAC_NEXT_STATE <= COOL_ON;
                         end if;                    
                     else
-                        HVAC_NEXT_STATE <= IDLE;
+                        HVAC_NEXT_STATE <= IDLE; -- Switch turned off, back to idle
                     end if;
                 when COOL_RDY =>
+                    acPowerControl_reg <= '1';
                     HVAC_NEXT_STATE <= COOL_RDY;
                     
+                    if unsigned(currentTemp_reg) <= unsigned(desiredTemp_reg) then
+                            acPowerControl_reg <= '0';
+                            HVAC_NEXT_STATE <= COOL_COMPLETE;
+                    end if; -- No else, default state is COOL_RDY
+                        
                     if acControlSwitch_reg = '1' and acColdStatus_reg = '0' then
                         fanPowerControl_reg <= '0';
                     elsif acControlSwitch_reg = '1' and acColdStatus_reg = '1' then
                         fanPowerControl_reg <= '1';
-                        if unsigned(currentTemp_reg) <= unsigned(desiredTemp_reg) then
-                            HVAC_NEXT_STATE <= COOL_COMPLETE;
-                        end if;
                     else
                         -- User turned off the AC switch, transition to complete which will handle the final fan status
                         HVAC_NEXT_STATE <= COOL_COMPLETE; 
                     end if;         
                 when COOL_COMPLETE =>
+                    acPowerControl_reg <= '0';
                     -- Don't transition to idle until the HVAC says the ac is no longer cool enough to run the fan. 
                     -- If the user switches to heat, there will be a delay in transition until the cold status flag goes low
                     if acColdStatus_reg = '0' then
@@ -153,11 +158,35 @@ begin
                         HVAC_NEXT_STATE <= HEAT_COMPLETE;
                     end if;  
                  when HEAT_RDY =>
-                    --TODO implement
+                    HVAC_NEXT_STATE <= HEAT_RDY;
+                    
+                    if unsigned(currentTemp_reg) >= unsigned(desiredTemp_reg) then
+                            HVAC_NEXT_STATE <= HEAT_COMPLETE;
+                    end if;
+                        
+                    if heatControlSwitch_reg = '1' and furnaceHotStatus_reg = '0' then
+                        fanPowerControl_reg <= '0';
+                    elsif heatControlSwitch_reg = '1' and furnaceHotStatus_reg = '1' then
+                        fanPowerControl_reg <= '1';   
+                    else
+                        -- User turned off the heat switch, transition to complete which will handle the final fan status
+                        HVAC_NEXT_STATE <= HEAT_COMPLETE; 
+                    end if;
                  when HEAT_COMPLETE =>
-                    --TODO implement
+                    heatPowerControl_reg <= '0';
+                    -- Don't transition to idle until the HVAC says the heat is no longer hot enough to run the fan. 
+                    -- If the user switches to ac, there will be a delay in transition until the hot status flag goes low
+                    if furnaceHotStatus_reg = '0' then
+                        fanPowerControl_reg <= '0';
+                        HVAC_NEXT_STATE <= IDLE;
+                    else
+                        HVAC_NEXT_STATE <= HEAT_COMPLETE;
+                    end if;
                 when others =>
                     HVAC_NEXT_STATE <= IDLE;
+                    acPowerControl_reg <= '0';
+                    heatPowerControl_reg <= '0';
+                    fanPowerControl_reg <= '0';
             end case;
                 
                 
@@ -166,16 +195,11 @@ begin
             else
                 displayedTemp_reg <= currentTemp_reg;
             end if;
-            
-            if acControlSwitch_reg = '1' then
-                
-            elsif heatControlSwitch_reg = '1' then
-                if unsigned(currentTemp_reg) < unsigned(desiredTemp_reg) then
-                    heatPowerControl_reg <= '1';
-                else
-                    heatPowerControl_reg <= '0';
-                end if;
-            end if;
+        else
+            acPowerControl_reg <= acPowerControl_reg;
+            heatPowerControl_reg <= heatPowerControl_reg;
+            fanPowerControl_reg <= fanPowerControl_reg;
+            HVAC_NEXT_STATE <= HVAC_NEXT_STATE;
         end if;
     end process;
     
@@ -184,6 +208,7 @@ begin
     begin
         if reset = '0' then
             HVAC_CURRENT_STATE <= IDLE;
+            -- Next state is set in combinitorial logic, don't reset here
         elsif (clk'event and clk = '1') then
             HVAC_CURRENT_STATE <= HVAC_NEXT_STATE;
         else
@@ -235,7 +260,5 @@ begin
             heatPowerControl <= heatPowerControl_reg;
             fanPowerControl <= fanPowerControl_reg;
         end if;
-    end process;
-  
-    
+    end process;    
 end Behavioral;

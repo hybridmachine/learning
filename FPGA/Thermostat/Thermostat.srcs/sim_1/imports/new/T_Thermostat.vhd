@@ -35,6 +35,9 @@ entity T_Thermostat is
 end T_Thermostat;
 
 architecture Behavioral of T_Thermostat is
+    constant WAITTIME : time := 100ns;
+    constant CLK_HALF_PERIOD : time := 5ns;
+    
     component Thermostat is
          Port ( desiredTemp : in STD_LOGIC_VECTOR(6 downto 0);
                 currentTemp : in STD_LOGIC_VECTOR(6 downto 0); 
@@ -42,8 +45,11 @@ architecture Behavioral of T_Thermostat is
                 displaySel : in STD_LOGIC;
                 acControlSwitch : in STD_LOGIC;
                 heatControlSwitch : in STD_LOGIC;
+                furnaceHotStatus : in STD_LOGIC; 
+                acColdStatus : in STD_LOGIC; 
                 acPowerControl : out STD_LOGIC;
                 heatPowerControl : out STD_LOGIC;
+                fanPowerControl : out STD_LOGIC;
                 clk : in STD_LOGIC;
                 reset : in STD_LOGIC );
         end component;
@@ -57,8 +63,11 @@ architecture Behavioral of T_Thermostat is
         signal T_HEAT_PWR_CTRL : STD_LOGIC;
         signal T_CLK : STD_LOGIC;
         signal T_RESET : STD_LOGIC;
+        signal T_AC_COLDSTATUS : STD_LOGIC;
+        signal T_FURNACE_HOT_STATUS : STD_LOGIC;
+        signal T_FAN_POWER : STD_LOGIC;
 begin
-
+    
     UUT: Thermostat port map (currentTemp => T_CURRENT_TEMP,
                               desiredTemp => T_DESIRED_TEMP,
                               displayedTemp => T_DISPLAY_TEMP,
@@ -67,28 +76,36 @@ begin
                               heatControlSwitch => T_HEAT_CTRL_SWITCH,
                               acPowerControl => T_AC_PWR_CTRL,
                               heatPowerControl => T_HEAT_PWR_CTRL,
+                              furnaceHotStatus => T_FURNACE_HOT_STATUS,
+                              acColdStatus => T_AC_COLDSTATUS,
+                              fanPowerControl => T_FAN_POWER,
                               clk => T_CLK,
                               reset => T_RESET);
 
+    -- The clock signal
     process 
     begin
         T_CLK <= '0';
-        wait for 5ns;
+        wait for CLK_HALF_PERIOD;
         T_CLK <= '1';
-        wait for 5ns;
+        wait for CLK_HALF_PERIOD;
     end process;
     
+    -- The test process
     process
     begin
+        
         T_RESET <= '0'; -- Send reset
-        wait for 50ns;
+        wait for WAITTIME;
         T_RESET <= '1'; -- Begin normal operation
-        wait for 50ns;
+        wait for WAITTIME;
         
         -- Test display select function
         T_AC_CTRL_SWITCH <= '0'; -- AC off
         T_HEAT_CTRL_SWITCH <= '0'; -- HEAT off
-
+        T_AC_COLDSTATUS <= '0'; -- AC fan not ready
+        T_FURNACE_HOT_STATUS <= '0'; -- Heat fan not ready
+        
         T_CURRENT_TEMP <= "0000000";
         T_DESIRED_TEMP <= "1111111";
 
@@ -106,33 +123,69 @@ begin
         T_HEAT_CTRL_SWITCH <= '0'; -- HEAT off
         T_CURRENT_TEMP <= "0011001"; -- 25C
         T_DESIRED_TEMP <= "0010110"; -- 22C
-        wait for 50ns; 
+        wait for WAITTIME; 
         assert T_AC_PWR_CTRL = '1' report "AC Power was expected on" severity failure;
         assert T_HEAT_PWR_CTRL = '0' report "Heat Power was expected off" severity failure;
+        assert T_FAN_POWER = '0' report "Fan is expected off" severity failure;
+        
+        T_AC_COLDSTATUS <= '1';
+        wait for WAITTIME;
+        assert T_AC_PWR_CTRL = '1' report "AC Power was expected on" severity failure;
+        assert T_HEAT_PWR_CTRL = '0' report "Heat Power was expected off" severity failure;
+        assert T_FAN_POWER = '1' report "Fan is expected on" severity failure;
+        
         T_CURRENT_TEMP <= "0011000"; -- 24C
-        wait for 30ns;
+        wait for WAITTIME;
         assert T_AC_PWR_CTRL = '1' report "AC Power was expected on" severity failure;
         assert T_HEAT_PWR_CTRL = '0' report "Heat Power was expected off" severity failure;
+        assert T_FAN_POWER = '1' report "Fan is expected on" severity failure;
+        
         T_CURRENT_TEMP <= "0010111"; -- 23C
-        wait for 30ns;
+        wait for WAITTIME;
         assert T_AC_PWR_CTRL = '1' report "AC Power was expected on" severity failure;
         assert T_HEAT_PWR_CTRL = '0' report "Heat Power was expected off" severity failure;
+        assert T_FAN_POWER = '1' report "Fan is expected on" severity failure;
+        
         T_CURRENT_TEMP <= "0010101"; -- 21C
-        wait for 30ns;
+        wait for WAITTIME;
         assert T_AC_PWR_CTRL = '0' report "AC Power was expected off" severity failure;
         assert T_HEAT_PWR_CTRL = '0' report "Heat Power was expected off" severity failure;
+        assert T_FAN_POWER = '1' report "Fan is expected on" severity failure;
+        
+        T_AC_COLDSTATUS <= '0';
+        wait for WAITTIME;
+        assert T_AC_PWR_CTRL = '0' report "AC Power was expected off" severity failure;
+        assert T_HEAT_PWR_CTRL = '0' report "Heat Power was expected off" severity failure;
+        assert T_FAN_POWER = '0' report "Fan is expected off" severity failure;
+        
+        
         
         T_AC_CTRL_SWITCH <= '0'; -- AC off
         T_HEAT_CTRL_SWITCH <= '1'; -- HEAT on
-        wait for 30ns;
+        wait for WAITTIME;
         
         assert T_AC_PWR_CTRL = '0' report "AC Power was expected off" severity failure;
         assert T_HEAT_PWR_CTRL = '1' report "Heat Power was expected on" severity failure; -- Heat should be on
+        assert T_FAN_POWER = '0' report "Fan is expected off" severity failure;
+        
+        T_FURNACE_HOT_STATUS <= '1';
+        wait for WAITTIME;
+        assert T_AC_PWR_CTRL = '0' report "AC Power was expected off" severity failure;
+        assert T_HEAT_PWR_CTRL = '1' report "Heat Power was expected on" severity failure; -- Heat should be on
+        assert T_FAN_POWER = '1' report "Fan is expected on" severity failure;
+        
         
         T_CURRENT_TEMP <= "0010111"; -- 23C
-        wait for 30ns;
+        wait for WAITTIME;
         assert T_AC_PWR_CTRL = '0' report "AC Power was expected off"  severity failure;
         assert T_HEAT_PWR_CTRL = '0' report "Heat Power was expected off" severity failure; -- Heat should be off
+        assert T_FAN_POWER = '1' report "Fan is expected on" severity failure;
+        
+        T_FURNACE_HOT_STATUS <= '0';
+        wait for WAITTIME;
+        assert T_AC_PWR_CTRL = '0' report "AC Power was expected off"  severity failure;
+        assert T_HEAT_PWR_CTRL = '0' report "Heat Power was expected off" severity failure; -- Heat should be off
+        assert T_FAN_POWER = '0' report "Fan is expected off" severity failure;
         
         wait;
     end process;
