@@ -94,36 +94,36 @@ end process;
 -- Write 'Hello' to the first five bytes of RAM, via portA. Read it back on port B
 process
 begin
-    T_ADDR_A <= "0000000000000000";
-    T_ADDR_B <= "0000000000000000";
+    T_ADDR_A <= x"0000";
+    T_ADDR_B <= x"0000";
 
-    T_DATA_A <= "00000000";
+    T_DATA_A <= x"00";
     T_WRE_A <= "1";
     
     wait until T_CLKA'event and T_CLKA = '0';
     T_DATA_A <= CHAR2STD('H');
-    T_ADDR_A <= "0000000000000000";
+    T_ADDR_A <= x"0000";
     wait until T_CLKA'event and T_CLKA = '1';
     wait until T_CLKA'event and T_CLKA = '0';
     T_DATA_A <= CHAR2STD('e');
-    T_ADDR_A <= "0000000000000001";
+    T_ADDR_A <= x"0001";
     wait until T_CLKA'event and T_CLKA = '1';
     wait until T_CLKA'event and T_CLKA = '0';
     T_DATA_A <= CHAR2STD('L');
-    T_ADDR_A <= "0000000000000010";
+    T_ADDR_A <= x"0002";
     wait until T_CLKA'event and T_CLKA = '1';
     wait until T_CLKA'event and T_CLKA = '0';
     T_DATA_A <= CHAR2STD('L');
-    T_ADDR_A <= "0000000000000011";
+    T_ADDR_A <= x"0003";
     wait until T_CLKA'event and T_CLKA = '1';
     wait until T_CLKA'event and T_CLKA = '0';
     T_DATA_A <= CHAR2STD('o');
-    T_ADDR_A <= "0000000000000100";
+    T_ADDR_A <= x"0004";
     wait until T_CLKA'event and T_CLKA = '1';
     wait until T_CLKA'event and T_CLKA = '0';
     
     wait until T_CLKB'event and T_CLKB = '0';
-    T_ADDR_B <= "0000000000000000";
+    T_ADDR_B <= x"0000";
     wait until T_CLKB'event and T_CLKB = '1';
     wait until T_CLKB'event and T_CLKB = '0';
     wait until T_CLKB'event and T_CLKB = '1';
@@ -131,7 +131,7 @@ begin
     assert (T_DATA_B = CHAR2STD('H')) report "Address 0 does not contain 'H'" severity failure;
     
     wait until T_CLKB'event and T_CLKB = '0';
-    T_ADDR_B <= "0000000000000001";
+    T_ADDR_B <= x"0001";
     wait until T_CLKB'event and T_CLKB = '1';
     wait until T_CLKB'event and T_CLKB = '0';
     wait until T_CLKB'event and T_CLKB = '1';
@@ -139,7 +139,7 @@ begin
     assert (T_DATA_B = CHAR2STD('e')) report "Address 1 does not contain 'e'" severity failure;
     
     wait until T_CLKB'event and T_CLKB = '0';
-    T_ADDR_B <= "0000000000000010";
+    T_ADDR_B <= x"0002";
     wait until T_CLKB'event and T_CLKB = '1';
     wait until T_CLKB'event and T_CLKB = '0';
     wait until T_CLKB'event and T_CLKB = '1';
@@ -147,7 +147,7 @@ begin
     assert (T_DATA_B = CHAR2STD('L')) report "Address 2 does not contain 'L'" severity failure;
 
     wait until T_CLKB'event and T_CLKB = '0';
-    T_ADDR_B <= "0000000000000011";
+    T_ADDR_B <= x"0003";
     wait until T_CLKB'event and T_CLKB = '1';
     wait until T_CLKB'event and T_CLKB = '0';
     wait until T_CLKB'event and T_CLKB = '1';
@@ -155,7 +155,7 @@ begin
     assert (T_DATA_B = CHAR2STD('L')) report "Address 3 does not contain 'L'" severity failure;
 
     wait until T_CLKB'event and T_CLKB = '0';
-    T_ADDR_B <= "0000000000000100";
+    T_ADDR_B <= x"0004";
     wait until T_CLKB'event and T_CLKB = '1';
     wait until T_CLKB'event and T_CLKB = '0';
     wait until T_CLKB'event and T_CLKB = '1';
