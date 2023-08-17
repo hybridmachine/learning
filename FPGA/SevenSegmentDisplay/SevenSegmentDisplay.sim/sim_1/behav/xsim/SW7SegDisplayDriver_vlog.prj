@@ -1,0 +1,11 @@
+# compile verilog/system verilog design source files
+verilog xil_defaultlib  --include "../../../../SevenSegmentDisplay.gen/sources_1/ip/INCLKtoSYSCLK" \
+"../../../../SevenSegmentDisplay.gen/sources_1/ip/INCLKtoSYSCLK/INCLKtoSYSCLK_clk_wiz.v" \
+"../../../../SevenSegmentDisplay.gen/sources_1/ip/INCLKtoSYSCLK/INCLKtoSYSCLK.v" \
+"../../../../SevenSegmentDisplay.srcs/sources_1/new/SW7SegDisplayDriver.v" \
+
+# compile glbl module
+verilog xil_defaultlib "glbl.v"
+
+# Do not sort compile order
+nosort
