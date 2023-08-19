@@ -37,19 +37,8 @@ entity T_BlockRam is
 end T_BlockRam;
 
 architecture Behavioral of T_BlockRam is
-COMPONENT blk_mem_gen_0 IS
-  PORT (
-    clka : IN STD_LOGIC;
-    wea : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
-    addra : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
-    dina : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
-    clkb : IN STD_LOGIC;
-    addrb : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
-    doutb : OUT STD_LOGIC_VECTOR(7 DOWNTO 0)
-  );
-END COMPONENT;
 
-COMPONENT inferred_ram IS
+COMPONENT FPGA_RAM IS
   PORT (
     clka : IN STD_LOGIC;
     wea : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
@@ -75,16 +64,7 @@ constant CLKB_PERIOD : time := 2000 ns;
 
 begin
 
---DUT : blk_mem_gen_0 port map (
---    clka => T_CLKA,
---    wea => T_WRE_A,
---    addra => T_ADDR_A,
---    dina => T_DATA_A,
---    clkb => T_CLKB,
---    addrb => T_ADDR_B,
---    doutb => T_DATA_B);
-
-DUT : inferred_ram port map (
+DUT : FPGA_RAM port map (
     clka => T_CLKA,
     wea => T_WRE_A,
     addra => T_ADDR_A,
@@ -187,3 +167,4 @@ begin
 end process;
 
 end Behavioral;
+

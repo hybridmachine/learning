@@ -31,24 +31,9 @@ use IEEE.NUMERIC_STD.ALL;
 --library UNISIM;
 --use UNISIM.VComponents.all;
 use work.all;
-ENTITY inferred_ram IS
-  GENERIC(
-    ADDRESS_WIDTH: natural := 16;
-    DATA_WIDTH: natural := 8
-  );
-  PORT (
-    clka : IN STD_LOGIC;
-    wea : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
-    addra : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
-    dina : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
-    clkb : IN STD_LOGIC;
-    addrb : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
-    doutb : OUT STD_LOGIC_VECTOR(7 DOWNTO 0)
-  );
-END inferred_ram;
 
 -- Adapted from example on Page 516 of "Effective Coding with VHDL"
-architecture inferred_ram_arch of inferred_ram is
+architecture inferred_ram_arch of FPGA_RAM is
     constant RAM_DEPTH: natural := 2**ADDRESS_WIDTH;
     type ram_contents_type is array (natural range<>) of std_logic_vector(DATA_WIDTH - 1 downto 0);
     signal ram_contents: ram_contents_type (0 to RAM_DEPTH - 1);
