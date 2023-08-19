@@ -49,6 +49,18 @@ COMPONENT blk_mem_gen_0 IS
   );
 END COMPONENT;
 
+COMPONENT inferred_ram IS
+  PORT (
+    clka : IN STD_LOGIC;
+    wea : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
+    addra : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
+    dina : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
+    clkb : IN STD_LOGIC;
+    addrb : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
+    doutb : OUT STD_LOGIC_VECTOR(7 DOWNTO 0)
+  );
+END COMPONENT;
+
 signal T_CLKA : std_logic;
 signal T_WRE_A : STD_LOGIC_VECTOR(0 DOWNTO 0);
 signal T_ADDR_A : STD_LOGIC_VECTOR(15 DOWNTO 0);
@@ -63,7 +75,16 @@ constant CLKB_PERIOD : time := 2000 ns;
 
 begin
 
-DUT : blk_mem_gen_0 port map (
+--DUT : blk_mem_gen_0 port map (
+--    clka => T_CLKA,
+--    wea => T_WRE_A,
+--    addra => T_ADDR_A,
+--    dina => T_DATA_A,
+--    clkb => T_CLKB,
+--    addrb => T_ADDR_B,
+--    doutb => T_DATA_B);
+
+DUT : inferred_ram port map (
     clka => T_CLKA,
     wea => T_WRE_A,
     addra => T_ADDR_A,
@@ -71,7 +92,7 @@ DUT : blk_mem_gen_0 port map (
     clkb => T_CLKB,
     addrb => T_ADDR_B,
     doutb => T_DATA_B);
-
+    
 --clka
 process
 begin
