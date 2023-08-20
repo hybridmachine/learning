@@ -37,7 +37,6 @@ entity T_BlockRam is
 end T_BlockRam;
 
 architecture Behavioral of T_BlockRam is
-
 COMPONENT FPGA_RAM IS
   PORT (
     clka : IN STD_LOGIC;
@@ -61,6 +60,12 @@ signal T_DATA_B : STD_LOGIC_VECTOR(7 DOWNTO 0);
 
 constant CLKA_PERIOD : time := 1000 ns;
 constant CLKB_PERIOD : time := 2000 ns;
+
+-- Uncomment to Test with IP block
+for DUT:FPGA_RAM use entity WORK.FPGA_RAM(ip_ram_arch);
+
+-- Uncomment to Test with Inferred Ram
+-- for DUT:FPGA_RAM use entity WORK.FPGA_RAM(inferred_ram_arch);
 
 begin
 
