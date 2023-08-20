@@ -1,6 +1,6 @@
 ----------------------------------------------------------------------------------
 -- Company: 
--- Engineer: 
+-- Engineer: Brian Tabone
 -- 
 -- Create Date: 08/20/2023 12:20:10 PM
 -- Design Name: 
@@ -70,10 +70,9 @@ constant CLKB_PERIOD : time := 2000 ns;
 --for DUT:dp_mem use entity WORK.dp_mem(dp_mem_a);
 
 -- Uncomment to Test with Inferred Ram
-for DUT:dp_mem use entity WORK.dp_mem(dp_mem_inferred);
+for DUT:dp_mem use entity WORK.dp_mem(dp_mem_inferred_a);
 
 begin
-
 DUT :dp_mem port map (
     clka => T_CLKA,
     wea => T_WRE_A,
@@ -106,7 +105,7 @@ begin
 end process;
 
 -- Simulation process
--- Write 'Hello' to the first five bytes of RAM, via portA. Read it back on port B
+-- Write 'HELLO' to the first five bytes of RAM, via portA. Read it back on port B
 process
 begin
     T_ADDR_A <= x"0";
@@ -122,7 +121,7 @@ begin
     T_ADDR_A <= x"0";
     wait until T_CLKA'event and T_CLKA = '1';
     wait until T_CLKA'event and T_CLKA = '0';
-    T_DATA_IN_A <= x"00" & CHAR2STD('e');
+    T_DATA_IN_A <= x"00" & CHAR2STD('E');
     T_ADDR_A <= x"1";
     wait until T_CLKA'event and T_CLKA = '1';
     wait until T_CLKA'event and T_CLKA = '0';
@@ -134,7 +133,7 @@ begin
     T_ADDR_A <= x"3";
     wait until T_CLKA'event and T_CLKA = '1';
     wait until T_CLKA'event and T_CLKA = '0';
-    T_DATA_IN_A <= x"00" & CHAR2STD('o');
+    T_DATA_IN_A <= x"00" & CHAR2STD('O');
     T_ADDR_A <= x"4";
     wait until T_CLKA'event and T_CLKA = '1';
     wait until T_CLKA'event and T_CLKA = '0';
@@ -153,7 +152,7 @@ begin
     wait until T_CLKB'event and T_CLKB = '0';
     wait until T_CLKB'event and T_CLKB = '1';
     wait until T_CLKB'event and T_CLKB = '0';
-    assert (T_DATA_OUT_B = x"00" & CHAR2STD('e')) report "Address 1 does not contain 'e'" severity failure;
+    assert (T_DATA_OUT_B = x"00" & CHAR2STD('E')) report "Address 1 does not contain 'e'" severity failure;
     
     wait until T_CLKB'event and T_CLKB = '0';
     T_ADDR_B <= x"2";
@@ -177,7 +176,47 @@ begin
     wait until T_CLKB'event and T_CLKB = '0';
     wait until T_CLKB'event and T_CLKB = '1';
     wait until T_CLKB'event and T_CLKB = '0';
-    assert (T_DATA_OUT_B = x"00" & CHAR2STD('o')) report "Address 4 does not contain 'o'" severity failure;
+    assert (T_DATA_OUT_B = x"00" & CHAR2STD('O')) report "Address 4 does not contain 'o'" severity failure;
+    
+    -- Since we have 16 bit wide memory, why not write two characters at a time
+    -- This test takes that approach. Also here we do proper case Hello (vs HELLO)
+    wait until T_CLKA'event and T_CLKA = '0';
+    T_DATA_IN_A <= CHAR2STD('H') & CHAR2STD('e');
+    T_ADDR_A <= x"0";
+    wait until T_CLKA'event and T_CLKA = '1';
+    wait until T_CLKA'event and T_CLKA = '0';
+    T_DATA_IN_A <= CHAR2STD('l') & CHAR2STD('l');
+    T_ADDR_A <= x"1";
+    wait until T_CLKA'event and T_CLKA = '1';
+    wait until T_CLKA'event and T_CLKA = '0';
+    T_DATA_IN_A <= CHAR2STD('o') & x"00";
+    T_ADDR_A <= x"2";
+    wait until T_CLKA'event and T_CLKA = '1';
+    wait until T_CLKA'event and T_CLKA = '0';
+    
+    wait until T_CLKB'event and T_CLKB = '0';
+    T_ADDR_B <= x"0";
+    wait until T_CLKB'event and T_CLKB = '1';
+    wait until T_CLKB'event and T_CLKB = '0';
+    wait until T_CLKB'event and T_CLKB = '1';
+    wait until T_CLKB'event and T_CLKB = '0';
+    assert (T_DATA_OUT_B = CHAR2STD('H') & CHAR2STD('e')) report "Address 0 does not contain 'He'" severity failure;
+    
+    wait until T_CLKB'event and T_CLKB = '0';
+    T_ADDR_B <= x"1";
+    wait until T_CLKB'event and T_CLKB = '1';
+    wait until T_CLKB'event and T_CLKB = '0';
+    wait until T_CLKB'event and T_CLKB = '1';
+    wait until T_CLKB'event and T_CLKB = '0';
+    assert (T_DATA_OUT_B = CHAR2STD('l') & CHAR2STD('l')) report "Address 1 does not contain 'll'" severity failure;
+    
+    wait until T_CLKB'event and T_CLKB = '0';
+    T_ADDR_B <= x"2";
+    wait until T_CLKB'event and T_CLKB = '1';
+    wait until T_CLKB'event and T_CLKB = '0';
+    wait until T_CLKB'event and T_CLKB = '1';
+    wait until T_CLKB'event and T_CLKB = '0';
+    assert (T_DATA_OUT_B = CHAR2STD('o') & x"00") report "Address 2 does not contain 'o<null>'" severity failure;
     
     wait;
 end process;
