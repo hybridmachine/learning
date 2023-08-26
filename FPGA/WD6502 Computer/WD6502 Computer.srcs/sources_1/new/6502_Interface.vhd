@@ -32,7 +32,7 @@ use IEEE.STD_LOGIC_1164.ALL;
 --use UNISIM.VComponents.all;
 
 entity WD6502_Interface is
-    Port ( CLOCK : in STD_LOGIC;
+    Port ( CLOCK : in STD_LOGIC; -- Assume 100mhz clock
            RESET : in STD_LOGIC;
            CPU_STATUS : out STD_LOGIC_VECTOR (7 downto 0);
            BUS_DATA : inout STD_LOGIC_VECTOR (7 downto 0);
