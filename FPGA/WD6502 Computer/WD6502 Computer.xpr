@@ -194,6 +194,16 @@
     </FileSet>
     <FileSet Name="utils_1" Type="Utils" RelSrcDir="$PSRCDIR/utils_1" RelGenDir="$PGENDIR/utils_1">
       <Filter Type="Utils"/>
+      <File Path="$PSRCDIR/utils_1/imports/WD6502 Computer/MemoryManagerSynthesisPre.tcl">
+        <FileInfo>
+          <Attr Name="ImportPath" Val="$PPRDIR/MemoryManagerSynthesisPre.tcl"/>
+          <Attr Name="ImportTime" Val="1693171286"/>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+          <Attr Name="UsedInSteps" Val="synth_1;SYNTH_DESIGN;TCL.PRE"/>
+        </FileInfo>
+      </File>
       <Config>
         <Option Name="TopAutoSet" Val="TRUE"/>
       </Config>
@@ -223,7 +233,7 @@
         <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2023">
           <Desc>Vivado Synthesis Defaults</Desc>
         </StratHandle>
-        <Step Id="synth_design"/>
+        <Step Id="synth_design" PreStepTclHook="$PSRCDIR/utils_1/imports/WD6502 Computer/MemoryManagerSynthesisPre.tcl"/>
       </Strategy>
       <GeneratedRun Dir="$PRUNDIR" File="gen_run.xml"/>
       <ReportStrategy Name="Vivado Synthesis Default Reports" Flow="Vivado Synthesis 2023"/>
