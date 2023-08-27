@@ -31,7 +31,7 @@ entity RAM is
     GENERIC(
     ADDRESS_WIDTH: natural := 16;
     DATA_WIDTH: natural := 8;
-    RAM_DEPTH: natural := 2**16 -- By default 65kb ram can be adjusted to leave address space for I/O
+    RAM_DEPTH: natural := 2**15 -- By default 32kb ram for now, can be adjusted to leave address space for I/O
   );
     PORT (
 	addra: IN std_logic_VECTOR((ADDRESS_WIDTH - 1) downto 0);
