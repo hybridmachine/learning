@@ -36,7 +36,7 @@ use IEEE.NUMERIC_STD.ALL;
 entity MemoryManager is
     Port ( BUS_DATA : inout STD_LOGIC_VECTOR (7 downto 0);
            BUS_ADDRESS : in STD_LOGIC_VECTOR (15 downto 0);
-           CPU_CLOCK : in STD_LOGIC;
+           MEMORY_CLOCK : in STD_LOGIC; -- Run at 2x CPU, since reads take two cycles
            WRITE_FLAG : in STD_LOGIC -- When 1, data to address, read address and store on data line otherwise
            );
 end MemoryManager;
@@ -45,6 +45,18 @@ architecture Behavioral of MemoryManager is
 
 constant DATA_WIDTH: natural := 8;
 constant ADDRESS_WIDTH: natural := 16;
+
+constant ROM_END: std_logic_vector := x"FFFF";
+constant ROM_BASE: std_logic_vector := x"EFFF";
+constant RAM_END: std_logic_vector := x"EFFE";
+constant RAM_BASE: std_logic_vector := x"0400";
+constant MEM_MAPPED_IO_END: std_logic_vector := x"03FF";
+constant MEM_MAPPED_IO_BASE: std_logic_vector := x"0200";
+constant STACK_END: std_logic_vector := x"01FF";
+constant STACK_BASE: std_logic_vector := x"0100";
+constant SYS_RESERVED_END: std_logic_vector := x"00FF";
+constant SYS_RESERVED_BASE: std_logic_vector := x"0001";
+constant MEM_MANAGER_STATUS: std_logic_vector := x"0000";
 
 -- RAM signals
 signal ram_addra: std_logic_VECTOR((ADDRESS_WIDTH - 1) downto 0);
@@ -109,5 +121,48 @@ MAIN_ROM: ROM port map (
     douta => rom_douta,
     clka => rom_clka
 );
+
+-- Concurrent processes to distribute clock signals to RAM and ROM
+rom_clka <= MEMORY_CLOCK;
+ram_clka <= MEMORY_CLOCK;
+ram_clkb <= MEMORY_CLOCK;
+
+-- Always write A , read B
+ram_wea <= '1'; 
+ram_web <= '0';
+
+process(MEMORY_CLOCK)
+variable MEMORY_ADDRESS : unsigned(15 downto 0);
+begin    
+    if (MEMORY_CLOCK'event and MEMORY_CLOCK = '1') then
+        MEMORY_ADDRESS := unsigned(BUS_ADDRESS);
+        
+        -- Read from ROM
+        if (unsigned(ROM_BASE) <= MEMORY_ADDRESS and MEMORY_ADDRESS <= unsigned(ROM_END)) then
+            if (WRITE_FLAG = '0') then
+                rom_addra <= BUS_ADDRESS;
+                
+                -- Won't be valid until next clock cycle. For now we run the memory faster than the CPU to make sure data is ready ahead of processor read
+                BUS_DATA <= rom_douta; 
+            else
+                -- Set the error flag and BUS_DATA to 0
+                BUS_DATA <= "00000000";
+            end if;
+        -- Read/Write from/to RAM
+        elsif(unsigned(RAM_BASE) <= MEMORY_ADDRESS and MEMORY_ADDRESS <= unsigned(RAM_END)) then
+            -- Write on port A, read on port B
+            if (WRITE_FLAG = '1') then
+                ram_addra <= BUS_ADDRESS;
+                ram_dina <= BUS_DATA; 
+            else
+                -- Won't be valid until next clock cycle. For now we run the memory faster than the CPU to make sure data is ready ahead of processor read
+                ram_addrb <= BUS_ADDRESS;
+                BUS_DATA <= ram_doutb;
+            end if;
+        else
+            -- Set error bit, somehow address out of range of all address blocks
+        end if;
+    end if;
+end process;
 
 end Behavioral;
