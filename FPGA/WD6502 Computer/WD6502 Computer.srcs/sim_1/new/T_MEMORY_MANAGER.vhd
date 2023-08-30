@@ -37,7 +37,56 @@ end T_MEMORY_MANAGER;
 
 architecture Behavioral of T_MEMORY_MANAGER is
 
+COMPONENT MemoryManager is
+    Port ( BUS_DATA : inout STD_LOGIC_VECTOR (7 downto 0);
+           BUS_ADDRESS : in STD_LOGIC_VECTOR (15 downto 0);
+           MEMORY_CLOCK : in STD_LOGIC; -- Run at 2x CPU, since reads take two cycles
+           WRITE_FLAG : in STD_LOGIC -- When 1, data to address, read address and store on data line otherwise
+           );
+end COMPONENT;
+
+signal T_BUS_DATA : STD_LOGIC_VECTOR (7 downto 0);
+signal T_BUS_ADDRESS : STD_LOGIC_VECTOR (15 downto 0);
+signal T_MEMORY_CLOCK : STD_LOGIC;
+signal T_WRITE_FLAG : STD_LOGIC;
+
+constant CLOCK_PERIOD : time := 100ns; -- 10mhz
+
+-- For now copy/paste from MemoryManager.vhd, might 
+-- move to a package later, for now this is good enough for testing
+constant ROM_END: std_logic_vector := x"FFFF";
+constant ROM_BASE: std_logic_vector := x"EFFF";
+constant RAM_END: std_logic_vector := x"EFFE";
+constant RAM_BASE: std_logic_vector := x"0400";
+constant MEM_MAPPED_IO_END: std_logic_vector := x"03FF";
+constant MEM_MAPPED_IO_BASE: std_logic_vector := x"0200";
+constant STACK_END: std_logic_vector := x"01FF";
+constant STACK_BASE: std_logic_vector := x"0100";
+constant SYS_RESERVED_END: std_logic_vector := x"00FF";
+constant SYS_RESERVED_BASE: std_logic_vector := x"0001";
+constant MEM_MANAGER_STATUS: std_logic_vector := x"0000";
+
 begin
 
+-- Run the memory clock
+process
+begin
+    T_MEMORY_CLOCK <= '0';
+    wait for (CLOCK_PERIOD / 2);
+    T_MEMORY_CLOCK <= '1';
+    wait for (CLOCK_PERIOD / 2);
+end process;
 
+-- The test process
+process
+begin
+    T_WRITE_FLAG <= '0'; -- READ mode
+    
+    T_BUS_ADDRESS <= ROM_BASE;
+    wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '1';
+    wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '1';
+    assert (T_BUS_DATA = x"FE") report "ROM address 0 not FE" severity failure;
+    
+    
+end process;
 end Behavioral;

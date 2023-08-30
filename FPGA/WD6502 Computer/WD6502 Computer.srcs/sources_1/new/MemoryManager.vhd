@@ -133,6 +133,8 @@ ram_web <= '0';
 
 process(MEMORY_CLOCK)
 variable MEMORY_ADDRESS : unsigned(15 downto 0);
+variable SHIFTED_ADDRESS : unsigned(15 downto 0);
+
 begin    
     if (MEMORY_CLOCK'event and MEMORY_CLOCK = '1') then
         MEMORY_ADDRESS := unsigned(BUS_ADDRESS);
@@ -140,7 +142,8 @@ begin
         -- Read from ROM
         if (unsigned(ROM_BASE) <= MEMORY_ADDRESS and MEMORY_ADDRESS <= unsigned(ROM_END)) then
             if (WRITE_FLAG = '0') then
-                rom_addra <= BUS_ADDRESS;
+                SHIFTED_ADDRESS := MEMORY_ADDRESS - unsigned(ROM_BASE);
+                rom_addra <= std_logic_vector(SHIFTED_ADDRESS);
                 
                 -- Won't be valid until next clock cycle. For now we run the memory faster than the CPU to make sure data is ready ahead of processor read
                 BUS_DATA <= rom_douta; 
@@ -150,13 +153,14 @@ begin
             end if;
         -- Read/Write from/to RAM
         elsif(unsigned(RAM_BASE) <= MEMORY_ADDRESS and MEMORY_ADDRESS <= unsigned(RAM_END)) then
+            SHIFTED_ADDRESS := MEMORY_ADDRESS - unsigned(RAM_BASE);
             -- Write on port A, read on port B
             if (WRITE_FLAG = '1') then
-                ram_addra <= BUS_ADDRESS;
+                ram_addra <= std_logic_vector(SHIFTED_ADDRESS);
                 ram_dina <= BUS_DATA; 
             else
                 -- Won't be valid until next clock cycle. For now we run the memory faster than the CPU to make sure data is ready ahead of processor read
-                ram_addrb <= BUS_ADDRESS;
+                ram_addrb <= std_logic_vector(SHIFTED_ADDRESS);
                 BUS_DATA <= ram_doutb;
             end if;
         else
