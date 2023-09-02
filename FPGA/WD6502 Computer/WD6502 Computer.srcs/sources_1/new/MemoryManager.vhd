@@ -34,7 +34,8 @@ use IEEE.NUMERIC_STD.ALL;
 --          $40 -> Read from illegal address exception (set only by the memmory mapped I/O subsystem)
 -- This is a simple, nonconfigurable at runtime map. Longer term we'll probably want to mimic the Commodore 64 map with config bytes at $0000 and $0001
 entity MemoryManager is
-    Port ( BUS_DATA : inout STD_LOGIC_VECTOR (7 downto 0);
+    Port ( BUS_READ_DATA : out STD_LOGIC_VECTOR (7 downto 0); -- We could do this with inout but harder to test bench so splitting
+           BUS_WRITE_DATA : in STD_LOGIC_VECTOR (7 downto 0);
            BUS_ADDRESS : in STD_LOGIC_VECTOR (15 downto 0);
            MEMORY_CLOCK : in STD_LOGIC; -- Run at 2x CPU, since reads take two cycles
            WRITE_FLAG : in STD_LOGIC -- When 1, data to address, read address and store on data line otherwise
@@ -146,10 +147,10 @@ begin
                 rom_addra <= std_logic_vector(SHIFTED_ADDRESS);
                 
                 -- Won't be valid until next clock cycle. For now we run the memory faster than the CPU to make sure data is ready ahead of processor read
-                BUS_DATA <= rom_douta; 
+                BUS_READ_DATA <= rom_douta; 
             else
                 -- Set the error flag and BUS_DATA to 0
-                BUS_DATA <= "00000000";
+                BUS_READ_DATA <= "00000000";
             end if;
         -- Read/Write from/to RAM
         elsif(unsigned(RAM_BASE) <= MEMORY_ADDRESS and MEMORY_ADDRESS <= unsigned(RAM_END)) then
@@ -157,11 +158,11 @@ begin
             -- Write on port A, read on port B
             if (WRITE_FLAG = '1') then
                 ram_addra <= std_logic_vector(SHIFTED_ADDRESS);
-                ram_dina <= BUS_DATA; 
+                ram_dina <= BUS_WRITE_DATA; 
             else
                 -- Won't be valid until next clock cycle. For now we run the memory faster than the CPU to make sure data is ready ahead of processor read
                 ram_addrb <= std_logic_vector(SHIFTED_ADDRESS);
-                BUS_DATA <= ram_doutb;
+                BUS_READ_DATA <= ram_doutb;
             end if;
         else
             -- Set error bit, somehow address out of range of all address blocks
