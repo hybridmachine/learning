@@ -139,7 +139,6 @@ begin
     wait until T_MEMORY_CLOCK'event and T_MEMORY_CLOCK = '0';
     assert (T_BUS_READ_DATA = x"ED") report "RAM address 0 not ED" severity failure;
        
-    
     wait;
     
     
