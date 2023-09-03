@@ -34,23 +34,26 @@ use IEEE.STD_LOGIC_1164.ALL;
 entity WD6502_Interface is
     Port ( CLOCK : in STD_LOGIC; -- Assume 100mhz clock
            RESET : in STD_LOGIC;
-           CPU_STATUS : out STD_LOGIC_VECTOR (7 downto 0);
+           -- CPU_STATUS : out STD_LOGIC_VECTOR (7 downto 0);
            BUS_DATA : inout STD_LOGIC_VECTOR (7 downto 0);
            BUS_ADDRESS : in STD_LOGIC_VECTOR (15 downto 0);
-           CPU_CONTROL : inout STD_LOGIC_VECTOR (8 downto 0));
+           CPU_CONTROL : inout STD_LOGIC_VECTOR (10 downto 0);
+           CPU_CLOCK : out STD_LOGIC
+          );
 end WD6502_Interface;
 
 architecture Behavioral of WD6502_Interface is
 -- PIN indexes for CPU_CONTROL vector
-constant CPU_PHI2 : integer := 0;   -- CPU CLOCK
-constant CPU_RESB : integer := 1;   -- CPU RESET
-constant CPU_RDY : integer := 2;    -- CPU READY
-constant CPU_IRQB : integer := 3;   -- Maskable Interrupt
-constant CPU_NMIB : integer := 4;   -- Non Maskable Interrupt (Hardware)
-constant CPU_SYNC : integer := 5;   -- CPU Is requesting op code on this cycle
-constant CPU_VPB : integer := 6;    -- Interrupt vector being processed
-constant CPU_RWB : integer := 7;    -- Read/Write flag
-constant CPU_BE : integer := 8;     -- Bus Enable
+constant CPU_BE :integer := 0;      -- Bus Enable
+constant CPU_IRQB :integer := 1;    -- Interrupt Request
+constant CPU_MLB :integer := 2;     -- Memory Lock
+constant CPU_NMIB :integer := 3;    -- Non-Maskable Interrupt
+constant CPU_RDY :integer := 4;     -- Ready
+constant CPU_RESB :integer := 5;    -- Reset
+constant CPU_RWB :integer := 6;     -- Read/Write
+constant CPU_SOB :integer := 7;     -- Set Overflow
+constant CPU_SYNC :integer := 8;    -- Synchronize
+constant CPU_VPB :integer := 9;     -- Vector Pull
 
 constant FPGA_CLOCK_MHZ : integer := 100;
 
@@ -79,6 +82,9 @@ begin
 wd6502_clockmachine : process (CLOCK, RESET)
 variable FPGA_CLOCK_COUNTER_FOR_CPU : integer range 0 to FPGA_CLOCK_MHZ;
 begin
+    -- Push the internal signal out to the CPU clock PIN
+    CPU_CLOCK <= WD6502_CLOCK;
+    
     if (RESET = '1') then
         FPGA_CLOCK_COUNTER_FOR_CPU := 1;
         WD6502_CLOCK <= '0';
