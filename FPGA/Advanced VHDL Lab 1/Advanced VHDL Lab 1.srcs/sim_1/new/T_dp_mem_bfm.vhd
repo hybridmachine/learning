@@ -1,6 +1,5 @@
 ----------------------------------------------------------------------------------
--- Company: 
--- Engineer: 
+-- Engineer: Brian Tabone
 -- 
 -- Create Date: 09/04/2023 12:40:41 PM
 -- Design Name: 
@@ -8,7 +7,7 @@
 -- Project Name: 
 -- Target Devices: 
 -- Tool Versions: 
--- Description: 
+-- Description: Bus functional model with pseudocode file read for testing memory
 -- 
 -- Dependencies: 
 -- 
