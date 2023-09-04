@@ -105,7 +105,7 @@ end process;
 process
 file psuedocode_file: text;
     variable L_IN:          line;
-    variable INSTRUCTION:   string (1 to 4);
+    variable INSTRUCTION:   string (1 to 5);
     variable DUMMY:         character; -- Space between instructions, not used other than to perform the read
     variable ADDRESS:       std_logic_vector (3 DOWNTO 0);
     variable DATA:          std_logic_vector (15 DOWNTO 0);
@@ -119,14 +119,15 @@ begin
     T_WRE_A <= '0';
     T_WRE_B <= '0';
     
-    file_open(psuedocode_file, "C:\memtest.txt", READ_MODE);
+    -- Is in the sim_1/Text simulation sources, should get copied automaticaly to sim run directory
+    file_open(psuedocode_file, "memtest.txt", READ_MODE);
     
     -- Let a few clock cycles (we'll use the slower clock) pass before we start issuing commands
     wait until T_CLKB'event and T_CLKB = '1';
     wait until T_CLKB'event and T_CLKB = '1';
     wait until T_CLKB'event and T_CLKB = '1';
     
-    while (INSTRUCTION /= "END ") loop
+    while (INSTRUCTION /= "END  ") loop
         readline(psuedocode_file, L_IN);
         read(L_IN, INSTRUCTION);
         read(L_IN, DUMMY);
@@ -135,18 +136,21 @@ begin
         hread(L_IN, DATA); -- When in read mode, this is the expected value
                 
         case (INSTRUCTION) is
-            when "READ" =>
+            when "READ " =>
                 T_WRE_B <= '0';
                 T_ADDR_B <= ADDRESS;
                 wait until T_CLKB'event and T_CLKB = '1';
                 wait until T_CLKB'event and T_CLKB = '1';
-                assert (T_DATA_OUT_B = DATA) report "Address " & std_logic_vector'image(ADDRESS) & " does not contain " & std_logic_vector'image(DATA) severity failure;
+                assert (T_DATA_OUT_B = DATA) report "Address " & to_hstring(to_bitvector(ADDRESS)) & " does not contain " & to_hstring(to_bitvector(DATA)) severity failure;
             when "WRITE" =>
                 T_WRE_A <= '1';
                 T_ADDR_A <= ADDRESS;
                 T_DATA_IN_A <= DATA;
                 wait until T_CLKA'event and T_CLKB = '1';
                 wait until T_CLKA'event and T_CLKB = '1';
+            when "END  " =>
+                -- Use severity failure to stop the test, test is successful
+                assert FALSE report "Test completed successfully" severity failure;
             when others =>
                 assert FALSE report "Instruction non recognized" severity failure;
         end case;
