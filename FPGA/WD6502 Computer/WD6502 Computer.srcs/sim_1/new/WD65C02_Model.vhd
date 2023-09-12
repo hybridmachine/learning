@@ -70,7 +70,6 @@ type PROCESSOR_PINS_T is record
     MLB     : std_logic;
     NMIB    : std_logic;
     RDY     : std_logic;
-    RESB    : std_logic;
     RWB     : std_logic;
     SOB     : std_logic;
     SYNC    : std_logic;
@@ -119,7 +118,7 @@ begin
                     clock_delay_count := 0;
                     PROCESSOR_NEXT_STATE <= EXECUTING; -- Reset wasn't held for 2 clocks, go back to executing
                 else
-                    clock_delay_count := clock_delay_count - 1;
+                    -- We'll set clock_delay_count to 0 on the complete state
                     PROCESSOR_NEXT_STATE <= RESET_COMPLETE;
                 end if;
             when RESET_COMPLETE =>
@@ -146,7 +145,6 @@ begin
                 read(line_state, processor_pins_var.MLB);
                 read(line_state, processor_pins_var.NMIB);
                 read(line_state, processor_pins_var.RDY);
-                read(line_state, processor_pins_var.RESB);
                 read(line_state, processor_pins_var.RWB);
                 read(line_state, processor_pins_var.SOB);
                 read(line_state, processor_pins_var.SYNC);

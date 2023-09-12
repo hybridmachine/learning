@@ -1,0 +1,2 @@
+7   100011010   FFFC    FE  -- Wait 7 clock cycles then address goes to FFFC and reads FE
+0   100011010   FFFD    ED  -- Immediate address goes to FFFD and reads ED
