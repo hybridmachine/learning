@@ -50,7 +50,9 @@ COMPONENT RAM is
 	douta: OUT std_logic_VECTOR((DATA_WIDTH - 1) downto 0);
 	doutb: OUT std_logic_VECTOR((DATA_WIDTH - 1) downto 0);
 	wea: IN std_logic;
-	web: IN std_logic
+	web: IN std_logic;
+	ena: IN std_logic;
+	enb: IN std_logic
   );
 end COMPONENT;
 
@@ -61,12 +63,14 @@ constant RAM_DEPTH : natural := 2**16;
 -- RAM signals
 signal T_CLKA : STD_LOGIC;
 signal T_WRE_A : STD_LOGIC;
+signal T_ENA : STD_LOGIC;
 signal T_ADDR_A : STD_LOGIC_VECTOR(ADDRESS_WIDTH - 1 DOWNTO 0);
 signal T_DATA_IN_A : STD_LOGIC_VECTOR(DATA_WIDTH - 1 DOWNTO 0);
 signal T_DATA_OUT_A : STD_LOGIC_VECTOR(DATA_WIDTH - 1 DOWNTO 0);
 
 signal T_CLKB : STD_LOGIC;
 signal T_WRE_B : STD_LOGIC;
+signal T_ENB : STD_LOGIC;
 signal T_ADDR_B : STD_LOGIC_VECTOR(ADDRESS_WIDTH - 1 DOWNTO 0);
 signal T_DATA_IN_B : STD_LOGIC_VECTOR(DATA_WIDTH - 1 DOWNTO 0);
 signal T_DATA_OUT_B : STD_LOGIC_VECTOR(DATA_WIDTH - 1 DOWNTO 0);
@@ -79,11 +83,13 @@ begin
 DUT: RAM port map (
     clka => T_CLKA,
     wea => T_WRE_A,
+    ena => T_ENA,
     addra => T_ADDR_A,
     dina => T_DATA_IN_A,
     douta => T_DATA_OUT_A,
     clkb => T_CLKB,
     web => T_WRE_B,
+    enb => T_ENB,
     addrb => T_ADDR_B,
     dinb => T_DATA_IN_B,
     doutb => T_DATA_OUT_B
@@ -118,6 +124,8 @@ begin
     -- Write to A , read from B
     T_WRE_A <= '1';
     T_WRE_B <= '0';
+    T_ENA <= '1';
+    T_ENB <= '1';
     
     wait until T_CLKA'event and T_CLKA = '0';
     T_DATA_IN_A <= CHAR2STD('H');

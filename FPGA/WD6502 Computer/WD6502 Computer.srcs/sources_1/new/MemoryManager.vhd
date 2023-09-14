@@ -70,6 +70,8 @@ signal ram_douta: std_logic_VECTOR((DATA_WIDTH - 1) downto 0);
 signal ram_doutb: std_logic_VECTOR((DATA_WIDTH - 1) downto 0);
 signal ram_wea: std_logic;
 signal ram_web: std_logic;
+signal ram_ena: std_logic;
+signal ram_enb: std_logic;
 
 signal rom_addra: std_logic_VECTOR((ADDRESS_WIDTH - 1) downto 0);
 signal rom_douta: std_logic_VECTOR((DATA_WIDTH - 1) downto 0);
@@ -91,7 +93,9 @@ COMPONENT RAM is
 	douta: OUT std_logic_VECTOR((DATA_WIDTH - 1) downto 0);
 	doutb: OUT std_logic_VECTOR((DATA_WIDTH - 1) downto 0);
 	wea: IN std_logic;
-	web: IN std_logic
+	web: IN std_logic;
+	ena: IN std_logic;
+	enb: IN std_logic
   );
 end COMPONENT;
 
@@ -114,7 +118,9 @@ MAIN_RAM: RAM port map (
     wea => ram_wea,
     web => ram_web,
     clka => ram_clka,
-    clkb => ram_clkb
+    clkb => ram_clkb,
+    ena => ram_ena,
+    enb => ram_enb
 ); 
 
 MAIN_ROM: ROM port map (
@@ -131,6 +137,9 @@ ram_clkb <= MEMORY_CLOCK;
 -- Always write A , read B
 ram_wea <= '1'; 
 ram_web <= '0';
+
+ram_ena <= '1';
+ram_enb <= '1';
 
 process(MEMORY_CLOCK)
 variable MEMORY_ADDRESS : unsigned(15 downto 0);
