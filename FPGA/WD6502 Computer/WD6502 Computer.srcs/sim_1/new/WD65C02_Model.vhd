@@ -51,7 +51,7 @@ end WD65C02_Model;
 architecture Behavioral of WD65C02_Model is
 constant CLOCK_CYCLES_RESET : natural := 7; -- Number of clock cycles to wait after reset before processor is ready
 
-type PROCESSOR_STATE is (   RESET_START,   -- RESB has gone low
+type PROCESSOR_STATE_T is ( RESET_START,   -- RESB has gone low
                             RESET_PENDING, -- We need two clock cycles with RESB held low 
                             RESET_COMPLETE, -- RESB is high after a low transition for 2 clock cycles and 7 clocks have passed since then
                             READ_BOOT_LOW,
@@ -79,9 +79,8 @@ type PROCESSOR_PINS_T is record
 end record PROCESSOR_PINS_T;
 
 signal processor_pins : PROCESSOR_PINS_T;
-                
-signal PROCESSOR_NEXT_STATE : PROCESSOR_STATE;
-signal PROCESSOR_CURRENT_STATE : PROCESSOR_STATE;
+
+signal PROCESSOR_STATE : PROCESSOR_STATE_T;
 
 file file_wd65c02_states : text;
 
@@ -98,7 +97,7 @@ SOB     <= processor_pins.SOB;
 SYNC    <= processor_pins.SYNC;
 VPB     <= processor_pins.VPB;
 
-wd65c02_next_state : process (RESB,PHI2)
+wd65c02_state_machine : process (RESB,PHI2)
 variable clock_delay_count : natural := 0;
 variable open_status :FILE_OPEN_STATUS := status_error; -- File not yet open
 variable line_state     : line;
@@ -106,82 +105,77 @@ variable TABSPACE : character;
 variable processor_pins_var : PROCESSOR_PINS_T;
 
 begin
-    if (RESB'event and RESB = '0') then
-        PROCESSOR_NEXT_STATE <= RESET_START;
-    elsif (PHI2'event and PHI2 = '1') then
-        case PROCESSOR_CURRENT_STATE is
-            when RESET_START =>
-                clock_delay_count := 1; -- When we get to this part of the FSM , one clock has already passed
-                PROCESSOR_NEXT_STATE <= RESET_PENDING;
-            when RESET_PENDING =>
-                if (RESB = '1') then
+   if (PHI2'event and PHI2 = '1') then
+        if (RESB = '0' and PROCESSOR_STATE /= RESET_START) then
+            PROCESSOR_STATE <= RESET_START;
+        else
+            case PROCESSOR_STATE is
+                when RESET_START =>
+                    clock_delay_count := 1; -- When we get to this part of the FSM , one clock has already passed
+                    PROCESSOR_STATE <= RESET_PENDING;
+                when RESET_PENDING =>
+                    if (RESB = '1') then
+                        clock_delay_count := 0;
+                        PROCESSOR_STATE <= EXECUTING; -- Reset wasn't held for 2 clocks, go back to executing
+                    else
+                        -- We'll set clock_delay_count to 0 on the complete state
+                        PROCESSOR_STATE <= RESET_COMPLETE;
+                    end if;
+                when RESET_COMPLETE =>
                     clock_delay_count := 0;
-                    PROCESSOR_NEXT_STATE <= EXECUTING; -- Reset wasn't held for 2 clocks, go back to executing
-                else
-                    -- We'll set clock_delay_count to 0 on the complete state
-                    PROCESSOR_NEXT_STATE <= RESET_COMPLETE;
-                end if;
-            when RESET_COMPLETE =>
-                clock_delay_count := 0;
-                
-                -- Close and re-open processor states (causes file to start back from the top)
-                if (open_status = open_ok) then
-                    file_close(file_wd65c02_states);
-                end if;
-                file_open(open_status, file_wd65c02_states, "wd65c02_states.txt", READ_MODE);
-                PROCESSOR_NEXT_STATE <= EXECUTING;
-            when EXECUTING =>
-                -- File format is
-                -- CLK_DLY  STATUSFLAGS ADDRESS DATA
-                -- STATUSFLAGS maps to the record process status
-                -- CLK_DLY is how many clock cycles to delay until the step is processed
-                readline(file_wd65c02_states, line_state);
-                read(line_state, clock_delay_count);
-                
-                read(line_state, TABSPACE);
-    
-                read(line_state, processor_pins_var.BE);
-                read(line_state, processor_pins_var.IRQB);
-                read(line_state, processor_pins_var.MLB);
-                read(line_state, processor_pins_var.NMIB);
-                read(line_state, processor_pins_var.RDY);
-                read(line_state, processor_pins_var.RWB);
-                read(line_state, processor_pins_var.SOB);
-                read(line_state, processor_pins_var.SYNC);
-                read(line_state, processor_pins_var.VPB);
-                
-                read(line_state, TABSPACE);
+                    
+                    -- Close and re-open processor states (causes file to start back from the top)
+                    if (open_status = open_ok) then
+                        file_close(file_wd65c02_states);
+                    end if;
+                    file_open(open_status, file_wd65c02_states, "wd65c02_states.txt", READ_MODE);
+                    PROCESSOR_STATE <= EXECUTING;
+                when EXECUTING =>
+                    -- File format is
+                    -- CLK_DLY  STATUSFLAGS ADDRESS DATA
+                    -- STATUSFLAGS maps to the record process status
+                    -- CLK_DLY is how many clock cycles to delay until the step is processed
+                    readline(file_wd65c02_states, line_state);
+                    read(line_state, clock_delay_count);
+                    
+                    read(line_state, TABSPACE);
         
-                read(line_state, processor_pins_var.ADDRESS);
-                
-                read(line_state, TABSPACE);
-                
-                read(line_state, processor_pins_var.DATA);    
-                
-                if (clock_delay_count = 0) then
-                    processor_pins <= processor_pins_var; -- Push to the signal which will propogate out to the interface    
-                    PROCESSOR_NEXT_STATE <= EXECUTING;      
-                else
-                    PROCESSOR_NEXT_STATE <= EXECUTING_DELAY;
-                end if;  
-            when EXECUTING_DELAY =>                       -- This state emulates waiting a number of clock cycles before processing step (such as after RESET)
-                if (clock_delay_count = 0) then
-                    processor_pins <= processor_pins_var; -- Push to the signal which will propogate out to the interface   
-                    PROCESSOR_NEXT_STATE <= EXECUTING;
-                else
-                    clock_delay_count := clock_delay_count - 1;
-                    PROCESSOR_NEXT_STATE <= EXECUTING_DELAY;
-                end if;
-            when others => 
-                PROCESSOR_NEXT_STATE <= RESET_COMPLETE; -- Jump straight to complete and re-read state file
-        end case;
-    end if;
-    
-end process wd65c02_next_state;
-
-wd65c02_current_state : process(PROCESSOR_NEXT_STATE)
-begin
-    PROCESSOR_CURRENT_STATE <= PROCESSOR_NEXT_STATE;
-end process wd65c02_current_state;
-
+                    read(line_state, processor_pins_var.BE);
+                    read(line_state, processor_pins_var.IRQB);
+                    read(line_state, processor_pins_var.MLB);
+                    read(line_state, processor_pins_var.NMIB);
+                    read(line_state, processor_pins_var.RDY);
+                    read(line_state, processor_pins_var.RWB);
+                    read(line_state, processor_pins_var.SOB);
+                    read(line_state, processor_pins_var.SYNC);
+                    read(line_state, processor_pins_var.VPB);
+                    
+                    read(line_state, TABSPACE);
+            
+                    read(line_state, processor_pins_var.ADDRESS);
+                    
+                    read(line_state, TABSPACE);
+                    
+                    read(line_state, processor_pins_var.DATA);    
+                    
+                    if (clock_delay_count = 0) then
+                        processor_pins <= processor_pins_var; -- Push to the signal which will propogate out to the interface    
+                        PROCESSOR_STATE <= EXECUTING;      
+                    else
+                        PROCESSOR_STATE <= EXECUTING_DELAY;
+                    end if;  
+                when EXECUTING_DELAY =>                       -- This state emulates waiting a number of clock cycles before processing step (such as after RESET)
+                    if (clock_delay_count = 0) then
+                        processor_pins <= processor_pins_var; -- Push to the signal which will propogate out to the interface   
+                        PROCESSOR_STATE <= EXECUTING;
+                    else
+                        clock_delay_count := clock_delay_count - 1;
+                        PROCESSOR_STATE <= EXECUTING_DELAY;
+                    end if;
+                when others => 
+                    PROCESSOR_STATE <= RESET_COMPLETE; -- Jump straight to complete and re-read state file
+            end case;
+        end if;
+    end if; -- RESB
+end process wd65c02_state_machine;
 end Behavioral;

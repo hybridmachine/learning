@@ -32,28 +32,28 @@ use IEEE.STD_LOGIC_1164.ALL;
 --use UNISIM.VComponents.all;
 
 entity WD6502_Interface is
-    Port ( CLOCK : in STD_LOGIC; -- Assume 100mhz clock
-           RESET : in STD_LOGIC;
-           -- CPU_STATUS : out STD_LOGIC_VECTOR (7 downto 0);
-           BUS_DATA : inout STD_LOGIC_VECTOR (7 downto 0);
-           BUS_ADDRESS : in STD_LOGIC_VECTOR (15 downto 0);
-           CPU_CONTROL : inout STD_LOGIC_VECTOR (10 downto 0);
-           CPU_CLOCK : out STD_LOGIC
-          );
+    Port ( CLOCK        : in STD_LOGIC; -- Assume 100mhz clock
+           RESET        : in STD_LOGIC; -- User input reset button
+           SINGLESTEP   : in STD_LOGIC; -- When high, connect SYNC to RDY for single step operation
+           -- 6502 Connected Pins
+           ADDRESS      : in STD_LOGIC_VECTOR (15 downto 0);    -- Address bus
+           BE           : out STD_LOGIC;                        -- Bus Enable
+           DATA         : inout STD_LOGIC_VECTOR (7 downto 0);  -- Data bus
+           IRQB         : in STD_LOGIC;                         -- Interrupt Request
+           MLB          : inout STD_LOGIC;                      -- Memory Lock
+           NMIB         : in STD_LOGIC;                         -- Non-Maskable Interrupt
+           PHI1O        : in STD_LOGIC;                         -- Phase 1 out clock
+           PHI2         : out STD_LOGIC;                        -- Phase 2 in clock (main clock)
+           PHI2O        : in STD_LOGIC;                         -- Phase 2 out clock
+           RDY          : out STD_LOGIC;                        -- Ready
+           RESB         : out STD_LOGIC;                        -- Reset
+           RWB          : in STD_LOGIC;                         -- Read/Write
+           SOB          : in STD_LOGIC;                         -- Set Overflow
+           SYNC         : in STD_LOGIC;                         -- Synchronize
+           VPB          : in STD_LOGIC);                        -- Vector Pull
 end WD6502_Interface;
 
 architecture Behavioral of WD6502_Interface is
--- PIN indexes for CPU_CONTROL vector
-constant CPU_BE :integer := 0;      -- Bus Enable
-constant CPU_IRQB :integer := 1;    -- Interrupt Request
-constant CPU_MLB :integer := 2;     -- Memory Lock
-constant CPU_NMIB :integer := 3;    -- Non-Maskable Interrupt
-constant CPU_RDY :integer := 4;     -- Ready
-constant CPU_RESB :integer := 5;    -- Reset
-constant CPU_RWB :integer := 6;     -- Read/Write
-constant CPU_SOB :integer := 7;     -- Set Overflow
-constant CPU_SYNC :integer := 8;    -- Synchronize
-constant CPU_VPB :integer := 9;     -- Vector Pull
 
 constant FPGA_CLOCK_MHZ : integer := 100;
 
@@ -65,7 +65,7 @@ constant CPU_CLOCK_DIVIDER : integer := 2;
 -- When a positive edge (on RESB) is detected, there will be a reset sequence lasting seven clock cycles.
 constant CPU_RESET_HOLDOFF_CLOCKTICKS : integer := 7; 
 
-type CPU_STATE is ( RESET_START,
+type PROCESSOR_STATE_T is ( RESET_START,
                     RESET_COMPLETE,
                     READY,
                     OPCODE_FETCH,
@@ -73,17 +73,20 @@ type CPU_STATE is ( RESET_START,
                     WRITE_DATA,
                     STANDBY);
 
-signal NEXT_CPU_STATE : CPU_STATE;
-signal CURRENT_CPU_STATE : CPU_STATE;
+signal PROCESSOR_STATE : PROCESSOR_STATE_T;
 
 signal WD6502_CLOCK : std_logic;
 begin
 
+-- When SINGLESTEP is high, we are in single step mode, stop processor after opcode fetch
+-- Otherwise RDY is always high.
+RDY <= SYNC WHEN SINGLESTEP = '1' else '1';
+-- Push the internal signal out to the CPU clock PIN
+PHI2 <= WD6502_CLOCK;
+
 wd6502_clockmachine : process (CLOCK, RESET)
 variable FPGA_CLOCK_COUNTER_FOR_CPU : integer range 0 to FPGA_CLOCK_MHZ;
 begin
-    -- Push the internal signal out to the CPU clock PIN
-    CPU_CLOCK <= WD6502_CLOCK;
     
     if (RESET = '1') then
         FPGA_CLOCK_COUNTER_FOR_CPU := 1;
@@ -99,41 +102,37 @@ begin
     end if;
 end process wd6502_clockmachine;
 
-wd6502_statemachine : process (CLOCK, RESET)
+wd6502_statemachine : process (WD6502_CLOCK, RESET)
+variable reset_clock_count : natural := 0;
 begin
-    if (RESET = '1') then
-        NEXT_CPU_STATE <= RESET_START;
-    else
-        case CURRENT_CPU_STATE is
-            when RESET_START =>
-                -- We need to hold RESB low for at least 2 CPU clock cycles
+    if (WD6502_CLOCK'event and WD6502_CLOCK='1') then
+        if (RESET = '1') then
+            PROCESSOR_STATE <= RESET_START;
+            reset_clock_count := 2;
+            RESB <= '0';
+        else
+            case PROCESSOR_STATE is
+                when RESET_START =>
+                    if (reset_clock_count = 0) then
+                        PROCESSOR_STATE <= RESET_COMPLETE;
+                    else
+                        reset_clock_count := reset_clock_count - 1;
+                    end if;
+                when RESET_COMPLETE =>
+                    RESB <= '1';
+                    PROCESSOR_STATE <= READY;
+                when READY =>
+                    -- When SYNC goes high, CPU is reading an opcode
                 
-                -- Next we need to set RESB high and then wait for 7 CPU clock cycles 
-                -- before transitioning to RESET_COMPLETE
-            when RESET_COMPLETE =>
-                -- Transition to READY
-            when READY =>
-                -- When SYNC goes high, CPU is reading an opcode
-            
-            when READ_DATA =>
-            when WRITE_DATA =>
-            when OPCODE_FETCH =>
-            
-            when STANDBY =>
-            when others =>
-        end case;
+                when READ_DATA =>
+                when WRITE_DATA =>
+                when OPCODE_FETCH =>
+                
+                when STANDBY =>
+                when others =>
+            end case;
+        end if;
     end if;
 end process wd6502_statemachine;
-
-wd6502_updatestate : process (CLOCK,RESET)
-begin
-    if (RESET = '1') then
-        CURRENT_CPU_STATE <= RESET_START;
-    elsif (CLOCK'event and CLOCK = '1') then
-        CURRENT_CPU_STATE <= NEXT_CPU_STATE;
-    else
-        CURRENT_CPU_STATE <= CURRENT_CPU_STATE;
-    end if;
-end process wd6502_updatestate;
 
 end Behavioral;
