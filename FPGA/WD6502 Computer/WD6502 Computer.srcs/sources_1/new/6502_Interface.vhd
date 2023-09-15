@@ -55,6 +55,15 @@ end WD6502_Interface;
 
 architecture Behavioral of WD6502_Interface is
 
+COMPONENT MemoryManager is
+    Port ( BUS_READ_DATA : out STD_LOGIC_VECTOR (7 downto 0);
+           BUS_WRITE_DATA: in STD_LOGIC_VECTOR (7 downto 0);
+           BUS_ADDRESS : in STD_LOGIC_VECTOR (15 downto 0);
+           MEMORY_CLOCK : in STD_LOGIC; -- Run at 2x CPU, since reads take two cycles
+           WRITE_FLAG : in STD_LOGIC -- When 1, data to address, read address and store on data line otherwise
+           );
+end COMPONENT;
+
 constant FPGA_CLOCK_MHZ : integer := 100;
 
 -- Assuming a 100mhz FPGA clock, we'll divide our counter by this amount.
