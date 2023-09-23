@@ -95,12 +95,18 @@ PHI2 <= WD6502_CLOCK;
 
 wd6502_clockmachine : process (CLOCK, RESET)
 variable FPGA_CLOCK_COUNTER_FOR_CPU : integer range 0 to FPGA_CLOCK_MHZ;
+variable RESET_IN_PROGRESS : std_logic := '0';
 begin
     
-    if (RESET = '1') then
+    if (RESET = '0' and RESET_IN_PROGRESS = '0') then -- Reset active low
         FPGA_CLOCK_COUNTER_FOR_CPU := 1;
         WD6502_CLOCK <= '0';
+        RESET_IN_PROGRESS := '1';
     elsif (CLOCK'event and CLOCK = '1') then
+        if (RESET = '1' and RESET_IN_PROGRESS = '1') then
+            RESET_IN_PROGRESS := '0';
+        end if;
+        
         if (FPGA_CLOCK_COUNTER_FOR_CPU = FPGA_CLOCK_MHZ / CPU_CLOCK_DIVIDER) then
             FPGA_CLOCK_COUNTER_FOR_CPU := 1;
             WD6502_CLOCK <= not WD6502_CLOCK;
@@ -113,12 +119,14 @@ end process wd6502_clockmachine;
 
 wd6502_statemachine : process (WD6502_CLOCK, RESET)
 variable reset_clock_count : natural := 0;
+variable reset_in_progress : std_logic := '0';
 begin
     if (WD6502_CLOCK'event and WD6502_CLOCK='1') then
-        if (RESET = '1') then
+        if (RESET = '0' and reset_in_progress = '0') then
             PROCESSOR_STATE <= RESET_START;
             reset_clock_count := 2;
             RESB <= '0';
+            reset_in_progress := '1';
         else
             case PROCESSOR_STATE is
                 when RESET_START =>
@@ -130,6 +138,7 @@ begin
                 when RESET_COMPLETE =>
                     RESB <= '1';
                     PROCESSOR_STATE <= READY;
+                    reset_in_progress := '0';
                 when READY =>
                     -- When SYNC goes high, CPU is reading an opcode
                 

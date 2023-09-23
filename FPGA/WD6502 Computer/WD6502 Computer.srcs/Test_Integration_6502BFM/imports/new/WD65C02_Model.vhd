@@ -103,11 +103,12 @@ variable open_status :FILE_OPEN_STATUS := status_error; -- File not yet open
 variable line_state     : line;
 variable TABSPACE : character;
 variable processor_pins_var : PROCESSOR_PINS_T;
-
+variable reset_in_process : std_logic := '0';
 begin
    if (PHI2'event and PHI2 = '1') then
-        if (RESB = '0' and PROCESSOR_STATE /= RESET_START) then
+        if (RESB = '0' and reset_in_process /= '1') then
             PROCESSOR_STATE <= RESET_START;
+            reset_in_process := '1';
         else
             case PROCESSOR_STATE is
                 when RESET_START =>
@@ -116,6 +117,7 @@ begin
                 when RESET_PENDING =>
                     if (RESB = '1') then
                         clock_delay_count := 0;
+                        reset_in_process := '0';
                         PROCESSOR_STATE <= EXECUTING; -- Reset wasn't held for 2 clocks, go back to executing
                     else
                         -- We'll set clock_delay_count to 0 on the complete state
@@ -123,7 +125,7 @@ begin
                     end if;
                 when RESET_COMPLETE =>
                     clock_delay_count := 0;
-                    
+                    reset_in_process := '0';
                     -- Close and re-open processor states (causes file to start back from the top)
                     if (open_status = open_ok) then
                         file_close(file_wd65c02_states);
