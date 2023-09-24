@@ -81,7 +81,8 @@ signal T_SINGLESTEP   :STD_LOGIC; -- When high, connect SYNC to RDY for single s
 
 signal T_ADDRESS      :STD_LOGIC_VECTOR (15 downto 0);    -- Address bus
 signal T_BE           :STD_LOGIC;                        -- Bus Enable
-signal T_DATA         :STD_LOGIC_VECTOR (7 downto 0);  -- Data bus
+signal T_DATA_MODEL         :STD_LOGIC_VECTOR (7 downto 0) := (others => 'Z');  -- Data bus
+signal T_DATA_INTERFACE         :STD_LOGIC_VECTOR (7 downto 0) := (others => 'Z');  -- Data bus
 signal T_IRQB         :STD_LOGIC;                         -- Interrupt Request
 signal T_MLB          :STD_LOGIC;                      -- Memory Lock
 signal T_NMIB         :STD_LOGIC;                         -- Non-Maskable Interrupt
@@ -105,7 +106,7 @@ T_CLOCK <= not T_CLOCK after (CLOCK_PERIOD / 2);
 BFM : WD65C02_Model port map (
     ADDRESS => T_ADDRESS,
     BE => T_BE,
-    DATA => T_DATA,
+    DATA => T_DATA_MODEL,
     IRQB => T_IRQB,
     MLB => T_MLB,
     NMIB => T_NMIB,
@@ -126,7 +127,7 @@ DUT : WD6502_Interface port map (
     SINGLESTEP => T_SINGLESTEP,
     ADDRESS => T_ADDRESS,
     BE => T_BE,
-    DATA => T_DATA,
+    DATA => T_DATA_INTERFACE,
     IRQB => T_IRQB,
     MLB => T_MLB,
     NMIB => T_NMIB,
@@ -147,8 +148,13 @@ begin
     wait until T_PHI2 = '1';
     wait until T_PHI2 = '1';
     T_RESET <= '1';
+    wait until T_ADDRESS = x"FFFC";
+    assert (T_DATA_MODEL = x"FE") report "Boot data byte 1 not FE" severity failure;
     wait until T_PHI2 = '1';
     wait until T_PHI2 = '1';
-    wait;
+    assert (T_ADDRESS = x"FFFD") report "Boot vector address 2 not FFFD" severity failure;
+    assert (T_DATA_MODEL = x"ED") report "Boot data byte 2 not ED" severity failure;
+    
+    assert (false) report "Test completed successfully" severity failure;
 end process;
 end Behavioral;

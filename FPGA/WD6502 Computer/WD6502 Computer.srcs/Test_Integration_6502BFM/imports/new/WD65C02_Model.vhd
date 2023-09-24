@@ -96,9 +96,13 @@ RWB     <= processor_pins.RWB;
 SOB     <= processor_pins.SOB;
 SYNC    <= processor_pins.SYNC;
 VPB     <= processor_pins.VPB;
+ADDRESS <= processor_pins.ADDRESS;
+DATA    <= processor_pins.DATA when (processor_pins.RWB = '1') else (others => 'Z');
 
 wd65c02_state_machine : process (RESB,PHI2)
 variable clock_delay_count : natural := 0;
+variable clock_delay_count_str : string (1 to 2) := "00";
+
 variable open_status :FILE_OPEN_STATUS := status_error; -- File not yet open
 variable line_state     : line;
 variable TABSPACE : character;
@@ -137,36 +141,48 @@ begin
                     -- CLK_DLY  STATUSFLAGS ADDRESS DATA
                     -- STATUSFLAGS maps to the record process status
                     -- CLK_DLY is how many clock cycles to delay until the step is processed
-                    readline(file_wd65c02_states, line_state);
-                    read(line_state, clock_delay_count);
                     
-                    read(line_state, TABSPACE);
-        
-                    read(line_state, processor_pins_var.BE);
-                    read(line_state, processor_pins_var.IRQB);
-                    read(line_state, processor_pins_var.MLB);
-                    read(line_state, processor_pins_var.NMIB);
-                    read(line_state, processor_pins_var.RDY);
-                    read(line_state, processor_pins_var.RWB);
-                    read(line_state, processor_pins_var.SOB);
-                    read(line_state, processor_pins_var.SYNC);
-                    read(line_state, processor_pins_var.VPB);
+                    if (open_status = open_ok) then
+                        readline(file_wd65c02_states, line_state);
+                        read(line_state, clock_delay_count_str);
+                        
+                        if (clock_delay_count_str /= "EN") then
+                            read(line_state, TABSPACE);
+                
+                            read(line_state, processor_pins_var.BE);
+                            read(line_state, processor_pins_var.IRQB);
+                            read(line_state, processor_pins_var.MLB);
+                            read(line_state, processor_pins_var.NMIB);
+                            read(line_state, processor_pins_var.RDY);
+                            read(line_state, processor_pins_var.RWB);
+                            read(line_state, processor_pins_var.SOB);
+                            read(line_state, processor_pins_var.SYNC);
+                            read(line_state, processor_pins_var.VPB);
+                            
+                            read(line_state, TABSPACE);
                     
-                    read(line_state, TABSPACE);
-            
-                    read(line_state, processor_pins_var.ADDRESS);
-                    
-                    read(line_state, TABSPACE);
-                    
-                    read(line_state, processor_pins_var.DATA);    
-                    
-                    if (clock_delay_count = 0) then
-                        processor_pins <= processor_pins_var; -- Push to the signal which will propogate out to the interface    
-                        PROCESSOR_STATE <= EXECUTING;      
-                    else
-                        PROCESSOR_STATE <= EXECUTING_DELAY;
-                    end if;  
-                when EXECUTING_DELAY =>                       -- This state emulates waiting a number of clock cycles before processing step (such as after RESET)
+                            hread(line_state, processor_pins_var.ADDRESS);
+                            
+                            read(line_state, TABSPACE);
+                            
+                            hread(line_state, processor_pins_var.DATA);    
+                            
+                            clock_delay_count := natural'value(clock_delay_count_str);
+                            if (clock_delay_count = 0) then
+                                processor_pins <= processor_pins_var; -- Push to the signal which will propogate out to the interface    
+                                PROCESSOR_STATE <= EXECUTING;      
+                            else
+                                PROCESSOR_STATE <= EXECUTING_DELAY;
+                            end if;  
+                            else -- End has reached, restart
+                                if (open_status = open_ok) then
+                                    file_close(file_wd65c02_states);
+                                    open_status := status_error; -- TO mark it closed
+                                end if;
+                                PROCESSOR_STATE <= RESET_START;
+                            end if;
+                        end if;
+                    when EXECUTING_DELAY =>                       -- This state emulates waiting a number of clock cycles before processing step (such as after RESET)
                     if (clock_delay_count = 0) then
                         processor_pins <= processor_pins_var; -- Push to the signal which will propogate out to the interface   
                         PROCESSOR_STATE <= EXECUTING;
