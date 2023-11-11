@@ -1,3 +1,5 @@
+#ifndef _GAMEBOARD_H
+#define _GAMEBOARD_H
 /* John Conway's Game of Life playing field */
 #include <stdbool.h>
 
@@ -15,4 +17,4 @@ bool initgameboard(gameboard_t *gameboard,unsigned char value);
 int getCellIndex(gameboard_t *gameboard, int x, int y);
 bool setcell(gameboard_t *gameboard, int x, int y, unsigned char value);
 unsigned char getcell(gameboard_t *gameboard, int x, int y);
-void printgameboard(gameboard_t *gameboard);
+#endif

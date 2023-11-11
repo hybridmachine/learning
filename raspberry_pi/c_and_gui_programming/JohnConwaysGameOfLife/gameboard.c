@@ -50,20 +50,16 @@ bool setcell(gameboard_t *gameboard, int x, int y,  unsigned char value)
 
 unsigned char getcell(gameboard_t *gameboard, int x, int y)
 {
+    // Any out of bounds cells return 0
+    if ((x < 0) || 
+        (x >= gameboard->width) || 
+        (y < 0) || 
+        (y >= gameboard->height))
+    {
+        return 0;
+    }
+
     int cellArrayIndex = getCellIndex(gameboard, x, y);
     return gameboard->cells[cellArrayIndex];
 }
 
-/// @brief Print the gameboard in CSV style
-/// @param gameboard 
-void printgameboard(gameboard_t *gameboard)
-{
-    for (int row = 0; row < gameboard->height; row++)
-    {
-        for (int col = 0; col < gameboard->width; col ++)
-        {
-            printf("%d, ", getcell(gameboard, col, row));
-        }
-        printf("\n");
-    }
-}
