@@ -81,11 +81,11 @@ void printgameboard(gameboard_t *gameboard)
             unsigned char cellVal = getcell(gameboard, col, row);
             if (cellVal == CELL_DEAD)
             {
-                printf("   ");
+                printf("  ");
             }
             else
             {
-                printf(" X ");
+                printf("+ ");
             }
         }
         printf("\n");

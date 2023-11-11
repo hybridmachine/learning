@@ -13,7 +13,7 @@ void printGens(gameboard_t *gameboard_1, gameboard_t *gameboard_2)
     current = gameboard_1;
     next = gameboard_2;
 
-    for (int idx = 0; idx < 100; idx++)
+    for (int idx = 0; idx < 150; idx++)
     {
         system("clear");         
         printgameboard(current);
@@ -21,7 +21,7 @@ void printGens(gameboard_t *gameboard_1, gameboard_t *gameboard_2)
         temp = current;
         current = next;
         next = temp;
-        usleep(250000);
+        usleep(100000);
     }
 }
 
