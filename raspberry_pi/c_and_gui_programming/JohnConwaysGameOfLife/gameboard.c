@@ -1,5 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
+
 #include "gameboard.h"
 
 gameboard_t *creategameboard(int width, int height)
@@ -34,6 +36,12 @@ int getCellIndex(gameboard_t *gameboard, int x, int y)
     return (gameboard->height) * y + x;
 }
 
+bool initgameboard(gameboard_t *gameboard, unsigned char value)
+{
+    int count = gameboard->height * gameboard->width;
+    memset(gameboard->cells, value, count * sizeof(unsigned char));
+    return true;
+}
 bool setcell(gameboard_t *gameboard, int x, int y,  unsigned char value)
 {
     int cellArrayIndex = getCellIndex(gameboard, x, y);

@@ -11,7 +11,7 @@ typedef struct struct_gameboard {
 } gameboard_t;
 
 gameboard_t *creategameboard(int width, int height);
-bool initgameboard(gameboard_t board);
+bool initgameboard(gameboard_t *gameboard,unsigned char value);
 int getCellIndex(gameboard_t *gameboard, int x, int y);
 bool setcell(gameboard_t *gameboard, int x, int y, unsigned char value);
 unsigned char getcell(gameboard_t *gameboard, int x, int y);
