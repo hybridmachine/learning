@@ -1,5 +1,7 @@
 #include "gameoflife.h"
 #include <stdio.h>
+#include <string.h>
+
 
 /// @brief     Any live cell with fewer than two live neighbours dies, as if by underpopulation.
 ///    Any live cell with two or three live neighbours lives on to the next generation.
@@ -90,4 +92,60 @@ void printgameboard(gameboard_t *gameboard)
         }
         printf("\n");
     }
+}
+
+bool loadPatternFile(char *path, gameboard_t *board)
+{
+    // Open pattern file from path
+    FILE *patternFile = fopen(path, "r");
+    if (patternFile == NULL)
+    {
+        printf("Error opening file %s\n", path);
+        return false;
+    }
+    // Read in pattern file and find how many columns and rows it has
+    int maxRow = 0;
+    int maxCol = 0;
+    char line[256];
+    
+    int row = 10;
+    while (fgets(line, sizeof(line), patternFile))
+    {
+        int col = 8;
+        int lineLen = strlen(line);
+        for (int idx = 0; idx < lineLen; idx++)
+        {
+            if (line[idx] == 'O')
+            {
+                setcell(board, col, row, CELL_LIVE);
+            }
+            else if (line[idx] == '.')
+            {
+                setcell(board, col, row, CELL_DEAD);
+            }
+            else
+            {
+                if (line[idx] == '\n')
+                {
+                    continue;
+                }
+
+                // Otherwise error
+                printf("Invalid character in pattern file: %c\n", line[idx]);
+                return false;
+            }
+            col++;
+        }
+        row++;
+        if (col > maxCol)
+        {
+            maxCol = col;
+        }
+        if (row > maxRow)
+        {
+            maxRow = row;
+        }
+    }
+    printf("maxCol: %d, maxRow: %d\n", maxCol, maxRow);
+
 }
