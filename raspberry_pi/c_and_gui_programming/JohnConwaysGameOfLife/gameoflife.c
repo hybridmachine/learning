@@ -94,7 +94,7 @@ void printgameboard(gameboard_t *gameboard)
     }
 }
 
-bool loadPatternFile(char *path, gameboard_t *board)
+bool loadPatternFile(char *path, gameboard_t *board, int xOffset, int yOffset)
 {
     // Open pattern file from path
     FILE *patternFile = fopen(path, "r");
@@ -108,10 +108,10 @@ bool loadPatternFile(char *path, gameboard_t *board)
     int maxCol = 0;
     char line[256];
     
-    int row = 10;
+    int row = yOffset;
     while (fgets(line, sizeof(line), patternFile))
     {
-        int col = 8;
+        int col = xOffset;
         int lineLen = strlen(line);
         for (int idx = 0; idx < lineLen; idx++)
         {

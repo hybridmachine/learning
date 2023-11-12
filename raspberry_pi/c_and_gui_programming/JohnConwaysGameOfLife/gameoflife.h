@@ -17,6 +17,6 @@ unsigned getNextState(gameboard_t *gameboard, int x, int y);
 
 bool getNextGeneration(gameboard_t *current, gameboard_t *next);
 void printgameboard(gameboard_t *gameboard);
-bool loadPatternFile(char *path, gameboard_t *gameboard);
+bool loadPatternFile(char *path, gameboard_t *board, int xOffset, int yOffset);
 
 #endif
