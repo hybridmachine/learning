@@ -100,7 +100,7 @@ void activate(GtkApplication* app, gpointer user_data) {
     gtk_widget_show_all(window);
 
     // Set up the timer to update the grid every 100 milliseconds
-    g_timeout_add(100, update_grid, app_state);
+    g_timeout_add(10, update_grid, app_state);
 }
 
 int main(int argc, char **argv)
