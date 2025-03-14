@@ -3,11 +3,11 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -std=c11
 TARGET = explore_floating_point
-
+LINKOPT = -lm
 all: $(TARGET)
 
 $(TARGET): $(TARGET).o
-	$(CC) $(CFLAGS) -o $(TARGET) $(TARGET).o -lm
+	$(CC) $(CFLAGS) -o $(TARGET) $(TARGET).o $(LINKOPT)
 
 $(TARGET).o: $(TARGET).c
 	$(CC) $(CFLAGS) -c $(TARGET).c
