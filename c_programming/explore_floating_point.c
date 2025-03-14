@@ -62,7 +62,7 @@ void print_float_info(char *note, uint32_t float_mem)
 	printf("-----------------------------\n\n");
 }
 
-int main(int argc, char **argv) {
+int main() {
 
 	printf("Size of float is %ld bytes\n", sizeof(float));
 	
